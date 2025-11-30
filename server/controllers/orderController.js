@@ -129,11 +129,20 @@ export const createOrder = async (req, res, next) => {
     // Extract quantity from pricing.quantity string (e.g., "1000 Views" -> 1000)
     const targetQuantity = parseInt(pricing.quantity.replace(/[^0-9]/g, ''));
 
+    // Calculate GST (18%)
+    const baseAmount = pricing.price;
+    const gstRate = 0.18; // 18% GST
+    const gstAmount = baseAmount * gstRate;
+    const totalAmount = baseAmount + gstAmount;
+
     const order = await Order.create({
       customerId: req.user.id,
       pricingId,
       serviceId: pricing.serviceId,
-      amount: pricing.price,
+      amount: totalAmount, // Total amount including GST
+      baseAmount: baseAmount, // Original price before GST
+      gstAmount: gstAmount, // GST amount (18%)
+      gstRate: 18, // GST percentage
       customerDetails: {
         name: req.user.name,
         email: req.user.email,

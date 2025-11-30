@@ -199,7 +199,14 @@ export const sendOrderConfirmation = async (order, user) => {
             <p><strong>Order Number:</strong> ${order.orderNumber}</p>
             <p><strong>Service:</strong> ${order.service?.name || 'N/A'}</p>
             <p><strong>Plan:</strong> ${order.pricing?.planName || 'N/A'}</p>
-            <p><strong>Amount:</strong> ₹${order.amount}</p>
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+            <h4 style="margin-bottom: 10px;">Payment Breakdown</h4>
+            ${order.baseAmount ? `
+              <p><strong>Base Amount:</strong> ₹${parseFloat(order.baseAmount).toFixed(2)}</p>
+              <p><strong>GST (${order.gstRate || 18}%):</strong> ₹${parseFloat(order.gstAmount).toFixed(2)}</p>
+              <p style="font-size: 18px; color: #667eea;"><strong>Total Amount:</strong> ₹${parseFloat(order.amount).toFixed(2)}</p>
+            ` : `<p><strong>Amount:</strong> ₹${parseFloat(order.amount).toFixed(2)}</p>`}
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
             <p><strong>Status:</strong> ${order.status}</p>
             <p><strong>Expected Completion:</strong> ${new Date(order.estimatedCompletionDate).toLocaleDateString()}</p>
           </div>
@@ -347,10 +354,18 @@ export const sendPaymentReceipt = async (order, payment, user) => {
             <h3>Payment Receipt</h3>
             <p><strong>Transaction ID:</strong> ${payment.transactionId}</p>
             <p><strong>Order Number:</strong> ${order.orderNumber}</p>
-            <p><strong>Amount Paid:</strong> ₹${payment.amount}</p>
-            <p><strong>Payment Method:</strong> ${payment.gateway}</p>
-            <p><strong>Status:</strong> ${payment.status}</p>
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+            <h4 style="margin-bottom: 10px;">Payment Breakdown</h4>
+            ${order.baseAmount ? `
+              <p><strong>Base Amount:</strong> ₹${parseFloat(order.baseAmount).toFixed(2)}</p>
+              <p><strong>GST (${order.gstRate || 18}%):</strong> ₹${parseFloat(order.gstAmount).toFixed(2)}</p>
+              <p style="font-size: 18px; color: #10b981;"><strong>Total Paid:</strong> ₹${parseFloat(payment.amount).toFixed(2)}</p>
+            ` : `<p><strong>Amount Paid:</strong> ₹${parseFloat(payment.amount).toFixed(2)}</p>`}
+            <hr style="margin: 15px 0; border: none; border-top: 1px solid #ddd;">
+            <p><strong>Payment Method:</strong> ${payment.gateway.toUpperCase()}</p>
+            <p><strong>Status:</strong> <span style="color: #10b981;">✓ ${payment.status.toUpperCase()}</span></p>
             <p><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleString()}</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #666;"><em>GST is included as per Indian tax regulations</em></p>
           </div>
           <p>Your order is now being processed. You will receive updates via email.</p>
         </div>

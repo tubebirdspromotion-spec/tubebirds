@@ -65,7 +65,24 @@ Order.init(
     },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+      allowNull: false,
+      comment: 'Total amount including GST'
+    },
+    baseAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Base amount before GST'
+    },
+    gstAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'GST amount (18%)'
+    },
+    gstRate: {
+      type: DataTypes.DECIMAL(5, 2),
+      allowNull: true,
+      defaultValue: 18.00,
+      comment: 'GST rate percentage'
     },
     status: {
       type: DataTypes.ENUM('pending', 'processing', 'in-progress', 'completed', 'cancelled', 'refunded'),
