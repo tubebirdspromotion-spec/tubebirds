@@ -8,3 +8,10 @@ export { default as Portfolio } from './Portfolio'
 export { default as Contact } from './Contact'
 export { default as Login } from './Login'
 export { default as Register } from './Register'
+
+// Policy Pages
+export { default as PrivacyPolicy } from './PrivacyPolicy'
+export { default as TermsConditions } from './TermsConditions'
+export { default as RefundPolicy } from './RefundPolicy'
+export { default as Disclaimer } from './Disclaimer'
+

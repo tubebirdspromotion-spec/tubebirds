@@ -16,6 +16,12 @@ import ContactPage from './pages/Contact'
 import LoginPage from './pages/Login'
 import RegisterPage from './pages/Register'
 
+// Policy Pages
+import PrivacyPolicyPage from './pages/PrivacyPolicy'
+import TermsConditionsPage from './pages/TermsConditions'
+import RefundPolicyPage from './pages/RefundPolicy'
+import DisclaimerPage from './pages/Disclaimer'
+
 // Client Dashboard Pages
 import ClientDashboard from './pages/client/Dashboard'
 import ClientOrders from './pages/client/Orders'
@@ -57,6 +63,12 @@ function App() {
         <Route path="contact" element={<ContactPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        
+        {/* Policy Pages */}
+        <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="terms-conditions" element={<TermsConditionsPage />} />
+        <Route path="refund-policy" element={<RefundPolicyPage />} />
+        <Route path="disclaimer" element={<DisclaimerPage />} />
       </Route>
 
       {/* Client Dashboard Routes */}

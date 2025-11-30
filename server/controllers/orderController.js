@@ -111,6 +111,23 @@ export const createOrder = async (req, res, next) => {
   try {
     const { pricingId, channelDetails } = req.body;
 
+    // Validate YouTube video URL is provided
+    if (!channelDetails || !channelDetails.videoUrl) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'YouTube video URL is required before placing order'
+      });
+    }
+
+    // Basic YouTube URL validation
+    const youtubeUrlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+    if (!youtubeUrlPattern.test(channelDetails.videoUrl)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide a valid YouTube video URL'
+      });
+    }
+
     // Get pricing details
     const pricing = await Pricing.findByPk(pricingId, {
       include: [{

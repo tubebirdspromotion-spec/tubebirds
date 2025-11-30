@@ -86,8 +86,9 @@ const Footer = () => {
           <p>&copy; {currentYear} TubeBirds. All rights reserved.</p>
           <div className="mt-2 flex flex-wrap justify-center gap-2 sm:gap-4">
             <Link to="/privacy-policy" className="hover:text-primary-400 transition-colors">Privacy Policy</Link>
-            <Link to="/terms-of-service" className="hover:text-primary-400 transition-colors">Terms of Service</Link>
+            <Link to="/terms-conditions" className="hover:text-primary-400 transition-colors">Terms & Conditions</Link>
             <Link to="/refund-policy" className="hover:text-primary-400 transition-colors">Refund Policy</Link>
+            <Link to="/disclaimer" className="hover:text-primary-400 transition-colors">Disclaimer</Link>
           </div>
         </div>
       </div>
