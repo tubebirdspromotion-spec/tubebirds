@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { FaYoutube, FaBars, FaTimes, FaUser, FaSignOutAlt } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '../store/slices/authSlice'
+import toast from 'react-hot-toast'
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -11,9 +12,28 @@ const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const userMenuRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isUserMenuOpen])
 
   const handleLogout = () => {
     dispatch(logout())
+    toast.success('Logged out successfully')
+    setIsUserMenuOpen(false)
     navigate('/')
   }
 
@@ -74,16 +94,14 @@ const Navbar = () => {
           {/* Right Side - Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 hover:text-primary-600 transition-colors"
                 >
-                  <img
-                    src={user?.avatar || 'https://via.placeholder.com/40'}
-                    alt={user?.name}
-                    className="w-10 h-10 rounded-full border-2 border-primary-600"
-                  />
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white font-bold border-2 border-white shadow-md">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
                   <span className="font-medium">{user?.name}</span>
                 </button>
 

@@ -44,11 +44,12 @@ import { loadUser } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
-  const { token, user } = useSelector((state) => state.auth)
+  const { token, user, loading } = useSelector((state) => state.auth)
 
   useEffect(() => {
-    // Load user data if token exists but user data is missing
-    if (token && !user) {
+    // Load user data on mount if token exists in localStorage or Redux
+    const storedToken = localStorage.getItem('token')
+    if ((storedToken || token) && !user) {
       dispatch(loadUser())
     }
   }, [dispatch, token, user])

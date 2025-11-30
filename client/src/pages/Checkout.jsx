@@ -10,7 +10,7 @@ const Checkout = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
-  const { isAuthenticated, user } = useSelector((state) => state.auth)
+  const { isAuthenticated, user, token } = useSelector((state) => state.auth)
   
   const [plan, setPlan] = useState(null)
   const [formData, setFormData] = useState({
@@ -20,22 +20,32 @@ const Checkout = () => {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
 
   useEffect(() => {
     // Get plan from location state
     if (location.state?.plan) {
       setPlan(location.state.plan)
-    } else {
+    } else if (!plan) {
       toast.error('No plan selected')
       navigate('/pricing')
+      return
     }
+  }, [location.state, navigate, plan])
 
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      toast.error('Please login to continue')
-      navigate('/login', { state: { from: location } })
+  useEffect(() => {
+    // Check authentication only once
+    if (!hasCheckedAuth) {
+      const hasToken = localStorage.getItem('token') || token
+      
+      if (!hasToken && !isAuthenticated) {
+        toast.error('Please login to continue')
+        navigate('/login', { state: { from: location } })
+      }
+      
+      setHasCheckedAuth(true)
     }
-  }, [location, isAuthenticated, navigate])
+  }, [hasCheckedAuth, isAuthenticated, token, navigate, location])
 
   const validateYoutubeUrl = (url) => {
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/

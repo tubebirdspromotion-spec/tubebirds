@@ -13,7 +13,7 @@ import toast from 'react-hot-toast'
 
 const Pricing = () => {
   const navigate = useNavigate()
-  const { isAuthenticated } = useSelector((state) => state.auth)
+  const { isAuthenticated, user, token } = useSelector((state) => state.auth)
   const [selectedCategory, setSelectedCategory] = useState('views')
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -607,9 +607,21 @@ const Pricing = () => {
   }
 
   const handleOrderNow = (plan) => {
-    if (!isAuthenticated) {
+    // Check authentication more thoroughly
+    const hasToken = localStorage.getItem('token') || token
+    
+    if (!isAuthenticated && !hasToken) {
       toast.error('Please login to place an order')
       navigate('/login', { state: { returnTo: '/pricing' } })
+      return
+    }
+    
+    // If we have token but no user data loaded, show message
+    if (hasToken && !user) {
+      toast.loading('Loading your account...', { duration: 1000 })
+      setTimeout(() => {
+        handleOrderNow(plan) // Retry after user loads
+      }, 1500)
       return
     }
     
@@ -622,6 +634,7 @@ const Pricing = () => {
     }
     
     // Navigate to checkout with plan data
+    toast.success('Redirecting to checkout...')
     navigate('/checkout', { state: { plan: planWithCategory } })
   }
 
@@ -971,17 +984,16 @@ const Pricing = () => {
                   </div>
                 </div>
 
-                <Link
-                  to="/login"
+                <button
                   onClick={() => {
                     closeModal()
                     handleOrderNow(selectedPlan)
                   }}
-                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl bg-gradient-to-r ${selectedPlan.gradient} text-white`}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl bg-gradient-to-r ${selectedPlan.gradient} text-white hover:scale-105 transform`}
                 >
                   <FaRocket />
                   <span>Order {selectedPlan.name} Now</span>
-                </Link>
+                </button>
               </div>
             </motion.div>
           </motion.div>

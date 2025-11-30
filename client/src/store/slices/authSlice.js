@@ -1,11 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import api from '../../services/api'
 
+// Get initial token from localStorage
+const initialToken = localStorage.getItem('token')
+
 const initialState = {
   user: null,
-  token: null,
-  isAuthenticated: false,
-  loading: false,
+  token: initialToken,
+  isAuthenticated: !!initialToken,
+  loading: !!initialToken, // Set loading true if token exists, will load user data
   error: null,
 }
 
@@ -50,7 +53,7 @@ export const loadUser = createAsyncThunk(
       const response = await api.get('/auth/me')
       return response.data
     } catch (error) {
-      localStorage.removeItem('token')
+      // Don't remove token here, let the interceptor handle it
       return rejectWithValue(error.response?.data?.message || 'Failed to load user')
     }
   }
@@ -94,6 +97,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.token = action.payload.token
         state.user = action.payload.data.user
+        state.error = null
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false
@@ -109,6 +113,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.token = action.payload.token
         state.user = action.payload.data.user
+        state.error = null
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false
@@ -123,11 +128,14 @@ const authSlice = createSlice({
         state.isAuthenticated = true
         state.user = action.payload.data.user
       })
-      .addCase(loadUser.rejected, (state) => {
+      .addCase(loadUser.rejected, (state, action) => {
         state.loading = false
         state.isAuthenticated = false
         state.user = null
         state.token = null
+        state.error = action.payload
+        // Clear localStorage as well
+        localStorage.removeItem('token')
       })
       // Update Profile
       .addCase(updateProfile.pending, (state) => {

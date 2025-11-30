@@ -25,9 +25,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Don't auto-redirect on 401, let the components handle it
+    // Only clear token if it's actually invalid
+    if (error.response?.status === 401 && error.config.url !== '/auth/me') {
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Dispatch logout action instead of direct redirect
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
