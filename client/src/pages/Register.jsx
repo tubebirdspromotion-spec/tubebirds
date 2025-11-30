@@ -88,7 +88,7 @@ const Register = () => {
     try {
       await dispatch(registerUser(formData)).unwrap()
       toast.success('Registration successful! Welcome to TubeBirds!')
-      navigate('/dashboard')
+      navigate('/')
     } catch (error) {
       toast.error(error || 'Registration failed')
     }

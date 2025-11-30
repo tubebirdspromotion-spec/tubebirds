@@ -22,7 +22,8 @@ const Login = () => {
       if (result.data.user.role === 'admin') {
         navigate('/admin')
       } else {
-        navigate('/dashboard')
+        // Regular users stay on main website
+        navigate('/')
       }
     } catch (error) {
       toast.error(error || 'Login failed')
