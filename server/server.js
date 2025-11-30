@@ -32,6 +32,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import consultationRoutes from './routes/consultationRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import seedRoutes from './routes/seedRoutes.js';
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/consultations', consultationRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
