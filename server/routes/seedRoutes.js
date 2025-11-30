@@ -22,9 +22,14 @@ router.post('/initialize', async (req, res) => {
       });
     }
 
+    console.log('🌱 Starting database seed via API...');
+
     // Check if admin already exists
     const existingAdmin = await User.findOne({ 
       where: { email: 'tubebirdspromotion@gmail.com' } 
+    }).catch(err => {
+      console.error('Error checking admin:', err);
+      return null;
     });
 
     if (existingAdmin) {
@@ -37,11 +42,10 @@ router.post('/initialize', async (req, res) => {
       });
     }
 
-    console.log('🌱 Starting database seed via API...');
-
     // ============================================
     // 1. CREATE ADMIN USER
     // ============================================
+    console.log('Creating admin user...');
     const admin = await User.create({
       name: 'Admin User',
       email: 'tubebirdspromotion@gmail.com',
@@ -56,6 +60,7 @@ router.post('/initialize', async (req, res) => {
     // ============================================
     // 2. CREATE SERVICES
     // ============================================
+    console.log('Creating services...');
     const services = await Service.bulkCreate([
       {
         name: 'YouTube Video Promotion',
