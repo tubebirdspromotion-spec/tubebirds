@@ -8,12 +8,13 @@ import { login } from '../store/slices/authSlice'
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' })
-  const { loading } = useSelector((state) => state.auth)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setIsSubmitting(true)
     try {
       const result = await dispatch(login(formData)).unwrap()
       toast.success('Login successful!')
@@ -27,6 +28,8 @@ const Login = () => {
       }
     } catch (error) {
       toast.error(error || 'Login failed')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -193,10 +196,10 @@ const Login = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={loading}
+                  disabled={isSubmitting}
                   className="w-full bg-gradient-to-r from-red-600 via-red-700 to-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? (
+                  {isSubmitting ? (
                     'Signing in...'
                   ) : (
                     <>

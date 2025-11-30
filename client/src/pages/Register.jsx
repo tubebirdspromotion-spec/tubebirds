@@ -18,8 +18,8 @@ const Register = () => {
     isValid: null,
     message: ''
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { loading } = useSelector((state) => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
@@ -86,11 +86,14 @@ const Register = () => {
     }
 
     try {
+      setIsSubmitting(true)
       await dispatch(registerUser(formData)).unwrap()
       toast.success('Registration successful! Welcome to TubeBirds!')
       navigate('/')
     } catch (error) {
       toast.error(error || 'Registration failed')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -348,10 +351,10 @@ const Register = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={loading || !emailValidation.isValid}
+                  disabled={isSubmitting || !emailValidation.isValid}
                   className="w-full bg-gradient-to-r from-orange-600 via-red-600 to-red-700 text-white py-4 rounded-xl font-bold text-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {loading ? (
+                  {isSubmitting ? (
                     'Creating Account...'
                   ) : (
                     <>
