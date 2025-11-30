@@ -4,8 +4,8 @@ import api from '../../services/api'
 const initialState = {
   user: null,
   token: localStorage.getItem('token'),
-  isAuthenticated: false,
-  loading: false,
+  isAuthenticated: !!localStorage.getItem('token'),
+  loading: true,
   error: null,
 }
 
