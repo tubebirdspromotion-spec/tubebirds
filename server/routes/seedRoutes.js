@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Service from '../models/Service.js';
 import Pricing from '../models/Pricing.js';
 import Portfolio from '../models/Portfolio.js';
+import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
