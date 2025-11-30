@@ -298,7 +298,7 @@ const Portfolio = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4">
+            className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4"
           >
             {filterTypes.map((type) => (
               <button
