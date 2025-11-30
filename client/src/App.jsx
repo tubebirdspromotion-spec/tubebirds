@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import MainLayout from './layouts/MainLayout'
 import DashboardLayout from './layouts/DashboardLayout'
 import AdminLayout from './layouts/AdminLayout'
@@ -15,6 +15,7 @@ import PortfolioPage from './pages/Portfolio'
 import ContactPage from './pages/Contact'
 import LoginPage from './pages/Login'
 import RegisterPage from './pages/Register'
+import CheckoutPage from './pages/Checkout'
 
 // Policy Pages
 import PrivacyPolicyPage from './pages/PrivacyPolicy'
@@ -43,12 +44,14 @@ import { loadUser } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
+  const { token, user } = useSelector((state) => state.auth)
 
   useEffect(() => {
-    if (localStorage.getItem('token')) {
+    // Load user data if token exists but user data is missing
+    if (token && !user) {
       dispatch(loadUser())
     }
-  }, [dispatch])
+  }, [dispatch, token, user])
 
   return (
     <Routes>
@@ -70,6 +73,16 @@ function App() {
         <Route path="refund-policy" element={<RefundPolicyPage />} />
         <Route path="disclaimer" element={<DisclaimerPage />} />
       </Route>
+
+      {/* Checkout Route - Protected */}
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute allowedRoles={['client', 'admin']}>
+            <CheckoutPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Client Dashboard Routes */}
       <Route

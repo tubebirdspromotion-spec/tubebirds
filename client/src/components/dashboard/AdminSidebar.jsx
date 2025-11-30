@@ -1,8 +1,19 @@
-import { Link, useLocation } from 'react-router-dom'
-import { FaHome, FaShoppingBag, FaUsers, FaCog, FaDollarSign, FaImages, FaEnvelope, FaGlobe, FaChartLine } from 'react-icons/fa'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { FaHome, FaShoppingBag, FaUsers, FaCog, FaDollarSign, FaImages, FaEnvelope, FaGlobe, FaChartLine, FaSignOutAlt } from 'react-icons/fa'
+import { logout } from '../../store/slices/authSlice'
+import toast from 'react-hot-toast'
 
 const AdminSidebar = () => {
   const location = useLocation()
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    dispatch(logout())
+    toast.success('Logged out successfully')
+    navigate('/login')
+  }
 
   const links = [
     { name: 'Dashboard', path: '/admin', icon: <FaChartLine /> },
@@ -41,6 +52,15 @@ const AdminSidebar = () => {
               <span>{link.name}</span>
             </Link>
           ))}
+          
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-colors text-red-600 hover:bg-red-50 w-full mt-4"
+          >
+            <span className="text-xl"><FaSignOutAlt /></span>
+            <span className="font-semibold">Logout</span>
+          </button>
         </div>
       </nav>
     </aside>

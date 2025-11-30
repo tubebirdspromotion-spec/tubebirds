@@ -3,9 +3,9 @@ import api from '../../services/api'
 
 const initialState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  loading: true,
+  token: null,
+  isAuthenticated: false,
+  loading: false,
   error: null,
 }
 
@@ -38,8 +38,15 @@ export const register = createAsyncThunk(
 
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, getState }) => {
     try {
+      const { auth } = getState()
+      const token = auth.token || localStorage.getItem('token')
+      
+      if (!token) {
+        return rejectWithValue('No token found')
+      }
+      
       const response = await api.get('/auth/me')
       return response.data
     } catch (error) {

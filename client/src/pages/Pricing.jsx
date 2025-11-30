@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import { Parallax } from 'react-parallax'
 import { 
   FaYoutube, FaCheckCircle, FaRocket, FaStar, FaCrown,
@@ -11,6 +12,8 @@ import {
 import toast from 'react-hot-toast'
 
 const Pricing = () => {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useSelector((state) => state.auth)
   const [selectedCategory, setSelectedCategory] = useState('views')
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -604,7 +607,22 @@ const Pricing = () => {
   }
 
   const handleOrderNow = (plan) => {
-    toast.success(`Please login to order ${plan.name}`)
+    if (!isAuthenticated) {
+      toast.error('Please login to place an order')
+      navigate('/login', { state: { returnTo: '/pricing' } })
+      return
+    }
+    
+    // Add category to plan data
+    const planWithCategory = {
+      ...plan,
+      category: selectedCategory,
+      pricingId: plan.id,
+      serviceId: 1 // Default service ID, you can map categories to service IDs if needed
+    }
+    
+    // Navigate to checkout with plan data
+    navigate('/checkout', { state: { plan: planWithCategory } })
   }
 
   const fadeIn = {
@@ -832,8 +850,7 @@ const Pricing = () => {
                   {/* Action Buttons */}
                   <div className="space-y-1.5">
                     {/* Buy Now Button */}
-                    <Link
-                      to="/login"
+                    <button
                       onClick={() => handleOrderNow(plan)}
                       className={`w-full py-2.5 rounded-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg hover:shadow-xl transform hover:scale-105 ${
                         plan.popular
@@ -843,7 +860,7 @@ const Pricing = () => {
                     >
                       <FaRocket className="text-xs" />
                       <span>Buy Now</span>
-                    </Link>
+                    </button>
 
                     {/* Info Button */}
                     <button

@@ -41,11 +41,12 @@ export const register = async (req, res, next) => {
       verificationToken
     });
 
-    // Send verification email
+    // Send verification and welcome emails
     try {
       await sendVerificationEmail(user, verificationToken);
+      await sendWelcomeEmail(user);
     } catch (emailError) {
-      console.error('Failed to send verification email:', emailError);
+      console.error('Failed to send emails:', emailError);
       // Continue with registration even if email fails
     }
 
