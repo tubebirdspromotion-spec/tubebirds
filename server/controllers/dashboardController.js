@@ -3,6 +3,58 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Contact from '../models/Contact.js';
 import Pricing from '../models/Pricing.js';
+import Service from '../models/Service.js';
+
+// @desc    Get admin dashboard
+// @route   GET /api/dashboard/admin
+// @access  Private/Admin
+export const getAdminDashboard = async (req, res, next) => {
+  try {
+    // Total revenue and orders
+    const revenueData = await Order.findOne({
+      where: { paymentStatus: 'paid' },
+      attributes: [
+        [fn('SUM', col('amount')), 'totalRevenue'],
+        [fn('COUNT', col('id')), 'totalOrders']
+      ],
+      raw: true
+    });
+
+    // Pending orders count
+    const pendingOrders = await Order.count({
+      where: { status: 'pending' }
+    });
+
+    // Completed orders count
+    const completedOrders = await Order.count({
+      where: { status: 'completed' }
+    });
+
+    // Total users (clients only)
+    const totalUsers = await User.count({ 
+      where: { role: 'client' } 
+    });
+
+    // Active services count
+    const activeServices = await Service.count({
+      where: { isActive: true }
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        totalRevenue: Math.round(revenueData?.totalRevenue || 0),
+        totalOrders: revenueData?.totalOrders || 0,
+        pendingOrders: pendingOrders || 0,
+        completedOrders: completedOrders || 0,
+        totalUsers: totalUsers || 0,
+        activeServices: activeServices || 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // @desc    Get admin dashboard stats
 // @route   GET /api/dashboard/admin/stats
@@ -110,6 +162,83 @@ export const getAdminStats = async (req, res, next) => {
         unreadContacts,
         recentOrders,
         monthlyRevenue
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get client dashboard
+// @route   GET /api/dashboard/client
+// @access  Private
+export const getClientDashboard = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    // Total orders
+    const totalOrders = await Order.count({ 
+      where: { customerId: userId } 
+    });
+
+    // Pending orders
+    const pendingOrders = await Order.count({
+      where: { customerId: userId, status: 'pending' }
+    });
+
+    // Completed orders
+    const completedOrders = await Order.count({
+      where: { customerId: userId, status: 'completed' }
+    });
+
+    // Total spent
+    const totalSpentData = await Order.findOne({
+      where: { customerId: userId, paymentStatus: 'paid' },
+      attributes: [
+        [fn('SUM', col('amount')), 'total']
+      ],
+      raw: true
+    });
+
+    // Recent orders
+    const recentOrders = await Order.findAll({
+      where: { customerId: userId },
+      include: [
+        {
+          model: Pricing,
+          as: 'pricing',
+          attributes: ['name', 'quantity']
+        },
+        {
+          model: Service,
+          as: 'service',
+          attributes: ['name']
+        }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: 5,
+      raw: false
+    });
+
+    // Format recent orders for frontend
+    const formattedOrders = recentOrders.map(order => ({
+      id: order.id,
+      serviceName: order.service?.name || 'Service',
+      status: order.status,
+      amount: order.amount,
+      createdAt: order.createdAt
+    }));
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats: {
+          totalOrders: totalOrders || 0,
+          pendingOrders: pendingOrders || 0,
+          completedOrders: completedOrders || 0,
+          totalSpent: Math.round(totalSpentData?.total || 0)
+        },
+        recentOrders: formattedOrders
       }
     });
   } catch (error) {
