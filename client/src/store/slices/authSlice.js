@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { REHYDRATE } from 'redux-persist'
 import api from '../../services/api'
 
 // Get initial token from localStorage
@@ -87,6 +88,18 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Handle Redux Persist REHYDRATE action
+      .addCase(REHYDRATE, (state, action) => {
+        if (action.payload?.auth) {
+          const { auth } = action.payload
+          // Restore auth state from persisted storage
+          state.user = auth.user
+          state.token = auth.token || localStorage.getItem('token')
+          state.isAuthenticated = !!(auth.token || localStorage.getItem('token'))
+          // If we have token but no user, set loading to trigger user load
+          state.loading = !!(state.token && !state.user)
+        }
+      })
       // Login
       .addCase(login.pending, (state) => {
         state.loading = true
@@ -127,6 +140,10 @@ const authSlice = createSlice({
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.data.user
+        // Ensure token remains in state
+        if (!state.token) {
+          state.token = localStorage.getItem('token')
+        }
       })
       .addCase(loadUser.rejected, (state, action) => {
         state.loading = false
