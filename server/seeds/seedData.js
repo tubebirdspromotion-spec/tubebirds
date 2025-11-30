@@ -20,8 +20,8 @@ const seedDatabase = async () => {
     // ============================================
     const admin = await User.create({
       name: 'Admin User',
-      email: 'admin@tubebirdspromotion.com',
-      password: 'Admin@123',
+      email: 'tubebirdspromotion@gmail.com',
+      password: 'Vishal8081@#$',
       phone: '9876543210',
       role: 'admin',
       isVerified: true,

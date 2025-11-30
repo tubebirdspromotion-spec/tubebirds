@@ -23,7 +23,7 @@ router.post('/initialize', async (req, res) => {
 
     // Check if admin already exists
     const existingAdmin = await User.findOne({ 
-      where: { email: 'admin@tubebirdspromotion.com' } 
+      where: { email: 'tubebirdspromotion@gmail.com' } 
     });
 
     if (existingAdmin) {
@@ -31,7 +31,7 @@ router.post('/initialize', async (req, res) => {
         status: 'error',
         message: 'Database already seeded. Admin user already exists.',
         data: {
-          adminEmail: 'admin@tubebirdspromotion.com'
+          adminEmail: 'tubebirdspromotion@gmail.com'
         }
       });
     }
@@ -43,8 +43,8 @@ router.post('/initialize', async (req, res) => {
     // ============================================
     const admin = await User.create({
       name: 'Admin User',
-      email: 'admin@tubebirdspromotion.com',
-      password: 'Admin@123',
+      email: 'tubebirdspromotion@gmail.com',
+      password: 'Vishal8081@#$',
       phone: '9876543210',
       role: 'admin',
       isVerified: true,
@@ -197,8 +197,8 @@ router.post('/initialize', async (req, res) => {
       message: 'Database seeded successfully! 🎉',
       data: {
         admin: {
-          email: 'admin@tubebirdspromotion.com',
-          password: 'Admin@123',
+          email: 'tubebirdspromotion@gmail.com',
+          password: 'Vishal8081@#$',
           note: 'Use these credentials to login to admin dashboard'
         },
         created: {
@@ -208,8 +208,8 @@ router.post('/initialize', async (req, res) => {
         },
         nextSteps: [
           'Login at: https://tube-birds.netlify.app/login',
-          'Email: admin@tubebirdspromotion.com',
-          'Password: Admin@123'
+          'Email: tubebirdspromotion@gmail.com',
+          'Password: Vishal8081@#$'
         ]
       }
     });
@@ -230,7 +230,7 @@ router.post('/initialize', async (req, res) => {
 router.get('/status', async (req, res) => {
   try {
     const adminExists = await User.findOne({ 
-      where: { email: 'admin@tubebirdspromotion.com' } 
+      where: { email: 'tubebirdspromotion@gmail.com' } 
     });
     
     const servicesCount = await Service.count();
