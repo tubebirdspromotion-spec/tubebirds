@@ -1,0 +1,234 @@
+import User from '../models/User.js';
+import { sendTokenResponse } from '../utils/tokenUtils.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../utils/emailService.js';
+import crypto from 'crypto';
+
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
+export const register = async (req, res, next) => {
+  try {
+    const { name, email, password, phone } = req.body;
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    // Check if user exists (Sequelize)
+    const userExists = await User.findOne({ where: { email } });
+    if (userExists) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'User already exists with this email'
+      });
+    }
+
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
+    // Create user (password will be auto-hashed by beforeCreate hook)
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: 'client',
+      verificationToken
+    });
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user, verificationToken);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Continue with registration even if email fails
+    }
+
+    sendTokenResponse(user, 201, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate email & password
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide email and password'
+      });
+    }
+
+    // Check for user with password (use withPassword scope)
+    const user = await User.scope('withPassword').findOne({ 
+      where: { email } 
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Account is deactivated. Please contact admin.'
+      });
+    }
+
+    // Check if password matches
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Update last login
+    await user.update({ lastLogin: new Date() });
+
+    // Get user without password
+    const userWithoutPassword = await User.findByPk(user.id);
+
+    sendTokenResponse(userWithoutPassword, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get current logged in user
+// @route   GET /api/auth/me
+// @access  Private
+export const getMe = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+
+    res.status(200).json({
+      status: 'success',
+      data: { user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/auth/update-profile
+// @access  Private
+export const updateProfile = async (req, res, next) => {
+  try {
+    const fieldsToUpdate = {
+      name: req.body.name,
+      phone: req.body.phone,
+      avatar: req.body.avatar
+    };
+
+    // Remove undefined values
+    Object.keys(fieldsToUpdate).forEach(key => 
+      fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
+    );
+
+    const user = await User.findByPk(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    await user.update(fieldsToUpdate);
+
+    res.status(200).json({
+      status: 'success',
+      data: { user }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update password
+// @route   PUT /api/auth/update-password
+// @access  Private
+export const updatePassword = async (req, res, next) => {
+  try {
+    const user = await User.scope('withPassword').findByPk(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found'
+      });
+    }
+
+    // Check current password
+    const isMatch = await user.comparePassword(req.body.currentPassword);
+    
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password (will be auto-hashed by beforeUpdate hook)
+    await user.update({ password: req.body.newPassword });
+
+    // Get user without password
+    const userWithoutPassword = await User.findByPk(user.id);
+
+    sendTokenResponse(userWithoutPassword, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify email
+// @route   GET /api/auth/verify-email/:token
+// @access  Public
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({ 
+      where: { verificationToken: token } 
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired verification token'
+      });
+    }
+
+    // Update user
+    await user.update({
+      isVerified: true,
+      verificationToken: null
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Email verified successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
