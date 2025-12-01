@@ -84,6 +84,5 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   console.log('✅ ProtectedRoute: Rendering children')
   return children
 }
-}
 
 export default ProtectedRoute
