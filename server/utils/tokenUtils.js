@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 
+const resolveUserId = (user) => user?.id ?? user?._id ?? user?.dataValues?.id;
+
 export const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || '30d'
@@ -7,7 +9,11 @@ export const generateToken = (id) => {
 };
 
 export const sendTokenResponse = (user, statusCode, res) => {
-  const token = generateToken(user._id);
+  const userId = resolveUserId(user);
+  if (!userId) {
+    throw new Error('Unable to resolve user id for token generation');
+  }
+  const token = generateToken(userId);
 
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
@@ -20,7 +26,7 @@ export const sendTokenResponse = (user, statusCode, res) => {
     token,
     data: {
       user: {
-        id: user._id,
+        id: userId,
         name: user.name,
         email: user.email,
         role: user.role,
