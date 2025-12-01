@@ -40,11 +40,16 @@ import AdminPortfolio from './pages/admin/Portfolio'
 import AdminContacts from './pages/admin/Contacts'
 
 import ProtectedRoute from './components/ProtectedRoute'
-import { loadUser } from './store/slices/authSlice'
+import { loadUser, syncToken } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
   const { token, user, loading, isAuthenticated } = useSelector((state) => state.auth)
+
+  useEffect(() => {
+    // Sync token from localStorage on mount
+    dispatch(syncToken())
+  }, [dispatch])
 
   useEffect(() => {
     // Load user data on mount if token exists in localStorage or Redux

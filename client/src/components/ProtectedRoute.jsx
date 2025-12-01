@@ -1,9 +1,16 @@
 import { Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user, loading, token } = useSelector((state) => state.auth)
+  const [isRehydrated, setIsRehydrated] = useState(false)
+
+  // Wait a tick for redux-persist to rehydrate
+  useEffect(() => {
+    const timer = setTimeout(() => setIsRehydrated(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Check if token exists in localStorage as fallback
   const hasToken = token || localStorage.getItem('token')
@@ -21,11 +28,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     })
   }, [hasToken, token, isAuthenticated, user, loading, allowedRoles])
 
-  // Show loading while checking authentication
-  if (loading) {
-    console.log('🔄 ProtectedRoute: Showing loading spinner (loading=true)')
+  // Show loading while waiting for rehydration or checking authentication
+  if (!isRehydrated || loading) {
+    console.log('🔄 ProtectedRoute: Showing loading spinner', { isRehydrated, loading })
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-600"></div>
       </div>
     )

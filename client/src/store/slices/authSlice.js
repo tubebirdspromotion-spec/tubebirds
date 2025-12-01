@@ -81,9 +81,19 @@ const authSlice = createSlice({
       state.user = null
       state.token = null
       state.isAuthenticated = false
+      state.loading = false
     },
     clearError: (state) => {
       state.error = null
+    },
+    // New action to sync token from localStorage
+    syncToken: (state) => {
+      const lsToken = localStorage.getItem('token')
+      if (lsToken && !state.token) {
+        state.token = lsToken
+        state.isAuthenticated = true
+        state.loading = true // Will trigger loadUser
+      }
     },
   },
   extraReducers: (builder) => {
@@ -183,5 +193,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { logout, clearError } = authSlice.actions
+export const { logout, clearError, syncToken } = authSlice.actions
 export default authSlice.reducer
