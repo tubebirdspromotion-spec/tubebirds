@@ -6,7 +6,7 @@ import {
   FaYoutube, FaRocket, FaChartLine, FaUsers, FaPlay, 
   FaTrophy, FaCheckCircle, FaStar, FaMoneyBillWave,
   FaGoogle, FaCode, FaSearch, FaLightbulb, FaHeadset,
-  FaShieldAlt, FaClock, FaGlobe, FaPhone, FaWhatsapp,
+  FaShieldAlt, FaClock, FaGlobe, FaPhone, FaWhatsapp, FaEnvelope,
   FaBullhorn, FaVideo
 } from 'react-icons/fa'
 import { useForm } from 'react-hook-form'
@@ -160,7 +160,8 @@ const Home = () => {
           </div>
 
           <div className="container-custom relative z-10">
-            <div className="grid md:grid-cols-2 gap-12 items-center py-20">
+            {/* Main Content */}
+            <div className="grid md:grid-cols-2 gap-12 items-start py-20">
               {/* Left Content */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
@@ -218,33 +219,6 @@ const Home = () => {
                     </Link>
                   </motion.div>
                 </motion.div>
-
-                {/* Animated Stats */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6"
-                >
-                  {[
-                    { number: '500+', label: 'Happy Clients', icon: <FaUsers /> },
-                    { number: '50M+', label: 'Views Delivered', icon: <FaYoutube /> },
-                    { number: '98%', label: 'Success Rate', icon: <FaStar /> }
-                  ].map((stat, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.7 + index * 0.1, type: "spring" }}
-                      whileHover={{ scale: 1.1, y: -5 }}
-                      className="text-center bg-white/15 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-xl border border-white/20"
-                    >
-                      <div className="text-2xl sm:text-3xl mb-2">{stat.icon}</div>
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-extrabold">{stat.number}</div>
-                      <div className="text-xs sm:text-sm text-gray-100 mt-1">{stat.label}</div>
-                    </motion.div>
-                  ))}
-                </motion.div>
               </motion.div>
 
               {/* Right - Enquiry Form */}
@@ -252,7 +226,7 @@ const Home = () => {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 md:p-7 border-2 border-white/30 mt-0 md:-mt-32"
+                className="bg-white/20 backdrop-blur-md rounded-2xl shadow-2xl p-5 sm:p-6 md:p-7 border-2 border-white/30"
               >
                 <div className="text-center mb-3">
                   <motion.div
@@ -356,6 +330,75 @@ const Home = () => {
                 </p>
               </motion.div>
             </div>
+
+            {/* Quick Contact Info - Below Form */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-4 -translate-y-4"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.65, type: "spring" }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="text-center bg-gradient-to-br from-white to-gray-50 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-gray-200 hover:shadow-2xl hover:border-emerald-300 transition-all"
+              >
+                <div className="text-2xl sm:text-3xl mb-2 flex justify-center text-emerald-600"><FaWhatsapp /></div>
+                <div className="text-xs sm:text-sm text-gray-700 font-semibold">WhatsApp</div>
+                <a href="https://wa.me/919616164131" target="_blank" rel="noopener noreferrer" className="text-base sm:text-lg font-bold text-emerald-600 hover:text-emerald-700 transition-colors">+91 9616164131</a>
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.7, type: "spring" }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="text-center bg-gradient-to-br from-white to-gray-50 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-gray-200 hover:shadow-2xl hover:border-indigo-300 transition-all"
+              >
+                <div className="text-2xl sm:text-3xl mb-2 flex justify-center text-indigo-600"><FaPhone /></div>
+                <div className="text-xs sm:text-sm text-gray-700 font-semibold">Call Us</div>
+                <a href="tel:+918081447837" className="text-base sm:text-lg font-bold text-indigo-600 hover:text-indigo-700 transition-colors">+91 8081447837</a>
+              </motion.div>
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.75, type: "spring" }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="text-center bg-gradient-to-br from-white to-gray-50 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-gray-200 hover:shadow-2xl hover:border-rose-300 transition-all"
+              >
+                <div className="text-2xl sm:text-3xl mb-2 flex justify-center text-rose-600"><FaEnvelope /></div>
+                <div className="text-xs sm:text-sm text-gray-700 font-semibold">Email</div>
+                <a href="mailto:contact@tubebirdspromotion.com" className="text-base sm:text-lg font-bold text-rose-600 hover:text-rose-700 transition-colors break-all">contact@tubebirdspromotion.com</a>
+              </motion.div>
+            </motion.div>
+
+            {/* Animated Stats - Below Contact Info */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mt-4 -translate-y-4"
+            >
+              {[
+                { number: '1000+', label: 'Happy Clients', icon: <FaUsers />, color: 'text-blue-600', hoverBorder: 'hover:border-blue-300' },
+                { number: '100M+', label: 'Views Delivered', icon: <FaYoutube />, color: 'text-red-600', hoverBorder: 'hover:border-red-300' },
+                { number: '99.8%', label: 'Success Rate', icon: <FaStar />, color: 'text-amber-600', hoverBorder: 'hover:border-amber-300' }
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.9 + index * 0.1, type: "spring" }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  className={`text-center bg-gradient-to-br from-white to-gray-50 backdrop-blur-md rounded-2xl p-4 sm:p-5 shadow-lg border border-gray-200 hover:shadow-2xl transition-all ${stat.hoverBorder}`}
+                >
+                  <div className={`text-2xl sm:text-3xl mb-2 flex justify-center ${stat.color}`}>{stat.icon}</div>
+                  <div className="text-xl sm:text-2xl md:text-3xl font-extrabold text-gray-900">{stat.number}</div>
+                  <div className="text-xs sm:text-sm text-gray-700 mt-1 font-semibold">{stat.label}</div>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         </motion.div>
       </section>
@@ -558,29 +601,33 @@ const Home = () => {
             viewport={{ once: true }}
             className="mt-16 bg-gradient-to-r from-red-600 to-orange-600 p-8 md:p-12 rounded-2xl text-center"
           >
-            <h3 className="text-2xl md:text-3xl font-bold mb-6">Get in Touch With Us</h3>
-            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            <h3 className="text-2xl md:text-3xl font-bold mb-8 text-white">Get in Touch With Us</h3>
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <a 
                 href="tel:+918081447837"
-                className="bg-white/20 backdrop-blur-md p-6 rounded-xl border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center"
+                className="bg-white/20 backdrop-blur-md p-6 rounded-xl border border-white/30 hover:bg-white/30 transition-all flex flex-col items-center justify-center text-center"
               >
-                <FaPhone className="text-3xl mr-4" />
-                <div className="text-left">
-                  <div className="text-sm text-white/80">Call Us</div>
-                  <div className="text-2xl font-bold">8081447837</div>
-                </div>
+                <FaPhone className="text-4xl text-white mb-3" />
+                <div className="text-sm text-white/90 mb-2 font-semibold">Call Us</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">+91 8081447837</div>
               </a>
               <a 
                 href="https://wa.me/919616164131"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-white/20 backdrop-blur-md p-6 rounded-xl border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center"
+                className="bg-white/20 backdrop-blur-md p-6 rounded-xl border border-white/30 hover:bg-white/30 transition-all flex flex-col items-center justify-center text-center"
               >
-                <FaWhatsapp className="text-3xl mr-4" />
-                <div className="text-left">
-                  <div className="text-sm text-white/80">WhatsApp</div>
-                  <div className="text-2xl font-bold">9616164131</div>
-                </div>
+                <FaWhatsapp className="text-4xl text-white mb-3" />
+                <div className="text-sm text-white/90 mb-2 font-semibold">WhatsApp</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">+91 9616164131</div>
+              </a>
+              <a 
+                href="mailto:contact@tubebirdspromotion.com"
+                className="bg-white/20 backdrop-blur-md p-6 rounded-xl border border-white/30 hover:bg-white/30 transition-all flex flex-col items-center justify-center text-center"
+              >
+                <FaEnvelope className="text-4xl text-white mb-3" />
+                <div className="text-sm text-white/90 mb-2 font-semibold">Email</div>
+                <div className="text-lg sm:text-xl font-bold text-white break-all">contact@tubebirdspromotion.com</div>
               </a>
             </div>
           </motion.div>

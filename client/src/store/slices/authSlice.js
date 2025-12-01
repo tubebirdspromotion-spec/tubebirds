@@ -90,22 +90,32 @@ const authSlice = createSlice({
     builder
       // Handle Redux Persist REHYDRATE action
       .addCase(REHYDRATE, (state, action) => {
+        console.log('🔄 REHYDRATE action:', action.payload?.auth)
         if (action.payload?.auth) {
           const { auth } = action.payload
+          const lsToken = localStorage.getItem('token')
           // Restore auth state from persisted storage
           state.user = auth.user
-          state.token = auth.token || localStorage.getItem('token')
-          state.isAuthenticated = !!(auth.token || localStorage.getItem('token'))
+          state.token = auth.token || lsToken
+          state.isAuthenticated = !!(auth.token || lsToken)
           // If we have token but no user, set loading to trigger user load
           state.loading = !!(state.token && !state.user)
+          console.log('✅ REHYDRATE complete:', {
+            hasUser: !!state.user,
+            hasToken: !!state.token,
+            isAuthenticated: state.isAuthenticated,
+            loading: state.loading
+          })
         }
       })
       // Login
       .addCase(login.pending, (state) => {
+        console.log('⏳ login.pending')
         state.loading = true
         state.error = null
       })
       .addCase(login.fulfilled, (state, action) => {
+        console.log('✅ login.fulfilled:', action.payload.data.user)
         state.loading = false
         state.isAuthenticated = true
         state.token = action.payload.token
@@ -113,6 +123,7 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(login.rejected, (state, action) => {
+        console.log('❌ login.rejected:', action.payload)
         state.loading = false
         state.error = action.payload
       })
@@ -134,9 +145,11 @@ const authSlice = createSlice({
       })
       // Load User
       .addCase(loadUser.pending, (state) => {
+        console.log('⏳ loadUser.pending')
         state.loading = true
       })
       .addCase(loadUser.fulfilled, (state, action) => {
+        console.log('✅ loadUser.fulfilled:', action.payload.data.user)
         state.loading = false
         state.isAuthenticated = true
         state.user = action.payload.data.user
@@ -146,6 +159,7 @@ const authSlice = createSlice({
         }
       })
       .addCase(loadUser.rejected, (state, action) => {
+        console.log('❌ loadUser.rejected:', action.payload)
         state.loading = false
         state.isAuthenticated = false
         state.user = null

@@ -1,0 +1,27 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" fill="#ff0000">
+  <!-- Bird shape with play button -->
+  <defs>
+    <linearGradient id="birdGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cc0000;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main bird body -->
+  <path d="M 250 350 Q 200 300 200 200 Q 200 150 250 130 Q 300 110 350 150 L 380 180 Q 400 200 380 220 L 350 200 Q 320 180 300 200 Q 280 220 280 250 Q 280 300 250 350" fill="url(#birdGradient)"/>
+  
+  <!-- Upper wing -->
+  <path d="M 250 200 Q 150 150 100 180 Q 80 200 120 250 Q 180 200 250 200" fill="url(#birdGradient)"/>
+  
+  <!-- Lower wing/tail -->
+  <path d="M 280 280 Q 200 350 150 400 Q 130 420 160 420 Q 240 380 300 320 Q 280 300 280 280" fill="url(#birdGradient)"/>
+  
+  <!-- Head -->
+  <circle cx="350" cy="140" r="45" fill="url(#birdGradient)"/>
+  
+  <!-- Beak -->
+  <polygon points="395,140 480,130 395,150" fill="url(#birdGradient)"/>
+  
+  <!-- Play button (triangle) in the center -->
+  <polygon points="330,240 330,340 420,290" fill="white" opacity="0.95"/>
+</svg>

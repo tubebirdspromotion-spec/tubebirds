@@ -44,15 +44,25 @@ import { loadUser } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
-  const { token, user, loading } = useSelector((state) => state.auth)
+  const { token, user, loading, isAuthenticated } = useSelector((state) => state.auth)
 
   useEffect(() => {
     // Load user data on mount if token exists in localStorage or Redux
     const storedToken = localStorage.getItem('token')
-    if ((storedToken || token) && !user) {
+    console.log('🚀 App.jsx useEffect:', {
+      storedToken: storedToken ? 'exists' : 'null',
+      token: token ? 'exists' : 'null',
+      user: user ? { role: user.role, email: user.email } : null,
+      loading,
+      isAuthenticated,
+      willLoadUser: !!(storedToken || token) && !user && !loading
+    })
+    
+    if ((storedToken || token) && !user && !loading) {
+      console.log('📥 App.jsx: Dispatching loadUser()')
       dispatch(loadUser())
     }
-  }, [dispatch, token, user])
+  }, [dispatch, token, user, loading])
 
   return (
     <Routes>

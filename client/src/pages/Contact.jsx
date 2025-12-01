@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import api from '../services/api'
 import { 
   FaPhone, FaWhatsapp, FaEnvelope, FaMapMarkerAlt, 
-  FaClock, FaYoutube, FaInstagram, FaFacebook, FaTwitter 
+  FaClock, FaYoutube, FaInstagram, FaFacebook, FaLinkedin 
 } from 'react-icons/fa'
 
 const Contact = () => {
@@ -39,22 +39,22 @@ const Contact = () => {
     {
       icon: <FaPhone className="text-3xl" />,
       title: "Call Us",
-      value: "8081447837",
+      value: "+91 8081447837",
       link: "tel:+918081447837",
       color: "from-blue-500 to-blue-600"
     },
     {
       icon: <FaWhatsapp className="text-3xl" />,
       title: "WhatsApp",
-      value: "9616164131",
+      value: "+91 9616164131",
       link: "https://wa.me/919616164131",
       color: "from-green-500 to-green-600"
     },
     {
       icon: <FaEnvelope className="text-3xl" />,
       title: "Email",
-      value: "info@tubebirds.com",
-      link: "mailto:info@tubebirds.com",
+      value: "contact@tubebirdspromotion.com",
+      link: "mailto:contact@tubebirdspromotion.com",
       color: "from-red-500 to-red-600"
     },
     {
@@ -67,10 +67,10 @@ const Contact = () => {
   ]
 
   const socialLinks = [
-    { icon: <FaYoutube />, link: "#", color: "hover:text-red-600" },
-    { icon: <FaInstagram />, link: "#", color: "hover:text-pink-600" },
-    { icon: <FaFacebook />, link: "#", color: "hover:text-blue-600" },
-    { icon: <FaTwitter />, link: "#", color: "hover:text-blue-400" }
+    { icon: <FaYoutube />, link: "https://www.youtube.com/@TubeBirds", color: "hover:text-red-600" },
+    { icon: <FaInstagram />, link: "https://www.instagram.com/tubebirdspromotion?igsh=MTg2b3pzdjRrZmVseQ==", color: "hover:text-pink-600" },
+    { icon: <FaFacebook />, link: "https://www.facebook.com/share/17oFsdsk91/", color: "hover:text-blue-600" },
+    { icon: <FaLinkedin />, link: "https://www.linkedin.com/company/tubebirds-promotion/", color: "hover:text-blue-400" }
   ]
 
   return (
@@ -266,7 +266,7 @@ const Contact = () => {
                       className="text-2xl font-bold hover:text-yellow-300 transition-colors flex items-center"
                     >
                       <FaPhone className="mr-3" />
-                      8081447837
+                      +91 8081447837
                     </a>
                   </div>
                   <div className="border-t border-white/20 pt-4">
@@ -278,7 +278,7 @@ const Contact = () => {
                       className="text-2xl font-bold hover:text-green-300 transition-colors flex items-center"
                     >
                       <FaWhatsapp className="mr-3" />
-                      9616164131
+                      +91 9616164131
                     </a>
                   </div>
                 </div>

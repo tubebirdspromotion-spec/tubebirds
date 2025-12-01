@@ -18,16 +18,16 @@ const Footer = () => {
               India's leading YouTube promotion agency. We help content creators grow their channels organically with proven strategies.
             </p>
             <div className="flex justify-center sm:justify-start space-x-4">
-              <a href="#" className="hover:text-primary-400 transition-colors">
+              <a href="https://www.facebook.com/share/17oFsdsk91/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">
                 <FaFacebook className="text-lg sm:text-xl" />
               </a>
-              <a href="#" className="hover:text-primary-400 transition-colors">
+              <a href="https://www.linkedin.com/company/tubebirds-promotion/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">
                 <FaTwitter className="text-lg sm:text-xl" />
               </a>
-              <a href="#" className="hover:text-primary-400 transition-colors">
+              <a href="https://www.instagram.com/tubebirdspromotion?igsh=MTg2b3pzdjRrZmVseQ==" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">
                 <FaInstagram className="text-lg sm:text-xl" />
               </a>
-              <a href="#" className="hover:text-primary-400 transition-colors">
+              <a href="https://www.linkedin.com/company/tubebirds-promotion/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-400 transition-colors">
                 <FaLinkedin className="text-lg sm:text-xl" />
               </a>
             </div>
@@ -64,18 +64,18 @@ const Footer = () => {
             <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <li className="flex items-start justify-center sm:justify-start">
                 <FaMapMarkerAlt className="mr-2 mt-1 text-primary-400 flex-shrink-0" />
-                <span>123 Business Street, Mumbai, Maharashtra, India</span>
+                <span>Badauli Adai,Bhanwarkol, Dist- Ghazipur, Uttar Pradesh 233231</span>
               </li>
               <li className="flex items-center justify-center sm:justify-start">
                 <FaPhone className="mr-2 text-primary-400 flex-shrink-0" />
-                <a href="tel:+919876543210" className="hover:text-primary-400 transition-colors">
-                  +91 98765 43210
+                <a href="tel:+918081447837" className="hover:text-primary-400 transition-colors">
+                  +91 8081447837
                 </a>
               </li>
               <li className="flex items-center justify-center sm:justify-start">
                 <FaEnvelope className="mr-2 text-primary-400 flex-shrink-0" />
-                <a href="mailto:info@tubebirds.com" className="hover:text-primary-400 transition-colors break-all">
-                  info@tubebirds.com
+                <a href="mailto:contact@tubebirdspromotion.com" className="hover:text-primary-400 transition-colors break-all">
+                  contact@tubebirdspromotion.com
                 </a>
               </li>
             </ul>
