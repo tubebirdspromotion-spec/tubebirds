@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import MainLayout from './layouts/MainLayout'
@@ -40,11 +40,13 @@ import AdminPortfolio from './pages/admin/Portfolio'
 import AdminContacts from './pages/admin/Contacts'
 
 import ProtectedRoute from './components/ProtectedRoute'
-import { loadUser, syncToken } from './store/slices/authSlice'
+import { loadUser, syncToken, logout } from './store/slices/authSlice'
 
 function App() {
   const dispatch = useDispatch()
   const { token, user, loading, isAuthenticated } = useSelector((state) => state.auth)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     // Sync token from localStorage on mount
@@ -68,6 +70,20 @@ function App() {
       dispatch(loadUser())
     }
   }, [dispatch, token, user, loading])
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      console.log('🚫 App.jsx: auth:unauthorized event received, redirecting to /login')
+      dispatch(logout())
+      navigate('/login', {
+        replace: true,
+        state: { from: location.pathname },
+      })
+    }
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [dispatch, navigate, location.pathname])
 
   return (
     <Routes>

@@ -29,10 +29,8 @@ api.interceptors.response.use(
     // Only clear token if it's actually invalid
     if (error.response?.status === 401 && error.config.url !== '/auth/me') {
       localStorage.removeItem('token')
-      // Dispatch logout action instead of direct redirect
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-        window.location.href = '/login'
-      }
+      // Let the app respond via a custom event so routing stays client-side
+      window.dispatchEvent(new Event('auth:unauthorized'))
     }
     return Promise.reject(error)
   }
