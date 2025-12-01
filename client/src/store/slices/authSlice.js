@@ -8,8 +8,8 @@ const initialToken = localStorage.getItem('token')
 const initialState = {
   user: null,
   token: initialToken,
-  isAuthenticated: !!initialToken,
-  loading: !!initialToken, // Set loading true if token exists, will load user data
+  isAuthenticated: false, // Will be set after user loads
+  loading: !!initialToken, // Start loading if token exists, will load user data
   error: null,
 }
 
@@ -90,8 +90,9 @@ const authSlice = createSlice({
     syncToken: (state) => {
       const lsToken = localStorage.getItem('token')
       if (lsToken && !state.token) {
+        console.log('🔄 syncToken: Found token in localStorage, syncing to state')
         state.token = lsToken
-        state.isAuthenticated = true
+        state.isAuthenticated = false // Don't set true until user loads
         state.loading = true // Will trigger loadUser
       }
     },
@@ -104,12 +105,17 @@ const authSlice = createSlice({
         if (action.payload?.auth) {
           const { auth } = action.payload
           const lsToken = localStorage.getItem('token')
+          const finalToken = auth.token || lsToken
+          
           // Restore auth state from persisted storage
-          state.user = auth.user
-          state.token = auth.token || lsToken
-          state.isAuthenticated = !!(auth.token || lsToken)
+          state.user = auth.user || null
+          state.token = finalToken
+          // Only set authenticated if we have BOTH token and user
+          state.isAuthenticated = !!(finalToken && auth.user)
           // If we have token but no user, set loading to trigger user load
-          state.loading = !!(state.token && !state.user)
+          state.loading = !!(finalToken && !auth.user)
+          state.error = null
+          
           console.log('✅ REHYDRATE complete:', {
             hasUser: !!state.user,
             hasToken: !!state.token,
