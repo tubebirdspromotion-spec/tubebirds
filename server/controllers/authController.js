@@ -41,14 +41,20 @@ export const register = async (req, res, next) => {
       verificationToken
     });
 
-    // Send verification and welcome emails
-    try {
-      await sendVerificationEmail(user, verificationToken);
-      await sendWelcomeEmail(user);
-    } catch (emailError) {
-      console.error('Failed to send emails:', emailError);
-      // Continue with registration even if email fails
-    }
+    // Send verification and welcome emails in background
+    // Don't block the response
+    Promise.all([
+      sendVerificationEmail(user, verificationToken).catch(err => {
+        console.error('❌ Failed to send verification email:', err.message);
+      }),
+      sendWelcomeEmail(user).catch(err => {
+        console.error('❌ Failed to send welcome email:', err.message);
+      })
+    ]).then(() => {
+      console.log('✅ All registration emails sent successfully');
+    }).catch(err => {
+      console.error('⚠️ Some emails failed to send:', err.message);
+    });
 
     sendTokenResponse(user, 201, res);
   } catch (error) {

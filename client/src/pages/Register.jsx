@@ -87,9 +87,20 @@ const Register = () => {
 
     try {
       setIsSubmitting(true)
-      await dispatch(registerUser(formData)).unwrap()
+      const result = await dispatch(registerUser(formData)).unwrap()
+      
+      // Show success message
       toast.success('Registration successful! Welcome to TubeBirds!')
-      navigate('/')
+      
+      // Wait a brief moment for the auth state to update
+      setTimeout(() => {
+        // Navigate based on user role
+        if (result?.data?.user?.role === 'admin') {
+          navigate('/admin/dashboard')
+        } else {
+          navigate('/client/dashboard')
+        }
+      }, 500)
     } catch (error) {
       toast.error(error || 'Registration failed')
     } finally {

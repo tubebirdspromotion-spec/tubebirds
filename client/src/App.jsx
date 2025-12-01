@@ -38,6 +38,8 @@ import AdminServices from './pages/admin/Services'
 import AdminPricing from './pages/admin/Pricing'
 import AdminPortfolio from './pages/admin/Portfolio'
 import AdminContacts from './pages/admin/Contacts'
+import AdminConsultations from './pages/admin/Consultations'
+import AdminReviews from './pages/admin/Reviews'
 
 import ProtectedRoute from './components/ProtectedRoute'
 import { loadUser, syncToken, logout } from './store/slices/authSlice'
@@ -148,6 +150,8 @@ function App() {
         <Route path="pricing" element={<AdminPricing />} />
         <Route path="portfolio" element={<AdminPortfolio />} />
         <Route path="contacts" element={<AdminContacts />} />
+        <Route path="consultations" element={<AdminConsultations />} />
+        <Route path="reviews" element={<AdminReviews />} />
       </Route>
 
       {/* 404 Page */}

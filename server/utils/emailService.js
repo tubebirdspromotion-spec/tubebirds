@@ -47,6 +47,17 @@ const getTransporter = () => {
  */
 export const sendEmail = async (options) => {
   try {
+    // Validate required fields
+    if (!options.to || !options.subject || !options.html) {
+      throw new Error('Missing required email fields: to, subject, or html');
+    }
+
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+      console.error('❌ SMTP credentials not configured in .env file');
+      throw new Error('SMTP not configured');
+    }
+
     const transporter = getTransporter();
     const mailOptions = {
       from: `${process.env.FROM_NAME || 'TubeBirds Promotion'} <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
@@ -56,11 +67,21 @@ export const sendEmail = async (options) => {
       text: options.text || ''
     };
 
+    console.log(`📧 Attempting to send email to: ${options.to}`);
+    console.log(`   Subject: ${options.subject}`);
+    
     const info = await transporter.sendMail(mailOptions);
     console.log('✅ Email sent successfully:', info.messageId);
+    console.log('   Response:', info.response);
+    
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error('❌ Email send error:', error);
+    console.error('   Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
     throw new Error(`Failed to send email: ${error.message}`);
   }
 };

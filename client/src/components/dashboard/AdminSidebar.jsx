@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
-import { FaHome, FaShoppingBag, FaUsers, FaCog, FaDollarSign, FaImages, FaEnvelope, FaGlobe, FaChartLine, FaSignOutAlt } from 'react-icons/fa'
+import { FaHome, FaShoppingBag, FaUsers, FaCog, FaDollarSign, FaImages, FaEnvelope, FaGlobe, FaChartLine, FaSignOutAlt, FaCalendarCheck, FaStar } from 'react-icons/fa'
 import { logout } from '../../store/slices/authSlice'
 import toast from 'react-hot-toast'
 
@@ -23,6 +23,8 @@ const AdminSidebar = () => {
     { name: 'Pricing', path: '/admin/pricing', icon: <FaDollarSign /> },
     { name: 'Portfolio', path: '/admin/portfolio', icon: <FaImages /> },
     { name: 'Contacts', path: '/admin/contacts', icon: <FaEnvelope /> },
+    { name: 'Consultations', path: '/admin/consultations', icon: <FaCalendarCheck /> },
+    { name: 'Reviews', path: '/admin/reviews', icon: <FaStar /> },
   ]
 
   return (

@@ -23,10 +23,7 @@ const Home = () => {
   const onSubmitEnquiry = async (data) => {
     setIsSubmitting(true)
     try {
-      await api.post('/contact', {
-        ...data,
-        subject: 'Enquiry from Home Page'
-      })
+      await api.post('/consultations', data)
       toast.success('Thank you! We will contact you soon.')
       reset()
     } catch (error) {
