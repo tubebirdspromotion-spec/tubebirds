@@ -98,20 +98,8 @@ const ForgotPassword = () => {
           transition={{ duration: 0.5 }}
           className="max-w-md w-full"
         >
-          {/* Logo and Header */}
+          {/* Header */}
           <div className="text-center mb-8">
-            <Link to="/" className="inline-block">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center justify-center space-x-2 mb-6"
-              >
-                <div className="text-4xl">🐦</div>
-                <span className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  TubeBirds
-                </span>
-              </motion.div>
-            </Link>
-            
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
               Forgot Password?
             </h2>

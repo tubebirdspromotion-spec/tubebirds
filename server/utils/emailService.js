@@ -1,11 +1,18 @@
 import { Resend } from 'resend';
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend - handle missing API key gracefully
+let resend = null;
+try {
+  if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_your_api_key_here') {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Resend:', error.message);
+}
 
 // Email enabled flag
 const isEmailEnabled = () => {
-  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_your_api_key_here') {
+  if (!resend || !process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 're_your_api_key_here') {
     console.warn('⚠️ Resend API key not configured. Emails will not be sent.');
     return false;
   }
