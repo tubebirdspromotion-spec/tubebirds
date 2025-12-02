@@ -1,5 +1,5 @@
 import Consultation from '../models/Consultation.js';
-import { sendConsultationNotification, sendConsultationConfirmation } from '../utils/emailService.js';
+// import { sendConsultationNotification, sendConsultationConfirmation } from '../utils/emailService.js';
 
 // @desc    Submit consultation request
 // @route   POST /api/consultations
@@ -8,7 +8,10 @@ export const submitConsultation = async (req, res, next) => {
   try {
     const consultation = await Consultation.create(req.body);
 
-    // Send emails to both admin and customer
+    // EMAILS DISABLED FOR CONSULTATIONS
+    // Only sending emails for: Order confirmation and Password reset
+    // Uncomment below if you want to enable consultation emails
+    /*
     Promise.all([
       sendConsultationNotification(consultation).catch(err => {
         console.error('❌ Failed to send consultation notification to admin:', err.message);
@@ -21,10 +24,11 @@ export const submitConsultation = async (req, res, next) => {
     }).catch(err => {
       console.error('⚠️ Some consultation emails failed to send:', err.message);
     });
+    */
 
     res.status(201).json({
       status: 'success',
-      message: 'Thank you for your consultation request! We will contact you soon. Check your email for confirmation.',
+      message: 'Thank you for your consultation request! We will contact you soon.',
       data: { consultation }
     });
   } catch (error) {

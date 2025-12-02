@@ -1,7 +1,8 @@
 import User from '../models/User.js';
 import { sendTokenResponse } from '../utils/tokenUtils.js';
-import { sendVerificationEmail, sendWelcomeEmail } from '../utils/emailService.js';
+import { sendPasswordResetEmail } from '../utils/emailService.js';
 import crypto from 'crypto';
+import { sequelize } from '../config/db.js';
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -41,8 +42,10 @@ export const register = async (req, res, next) => {
       verificationToken
     });
 
-    // Send verification and welcome emails in background
-    // Don't block the response
+    // EMAILS DISABLED FOR REGISTRATION
+    // Only sending emails for: Order confirmation and Password reset
+    // Uncomment below if you want to enable welcome/verification emails
+    /*
     Promise.all([
       sendVerificationEmail(user, verificationToken).catch(err => {
         console.error('❌ Failed to send verification email:', err.message);
@@ -55,6 +58,7 @@ export const register = async (req, res, next) => {
     }).catch(err => {
       console.error('⚠️ Some emails failed to send:', err.message);
     });
+    */
 
     sendTokenResponse(user, 201, res);
   } catch (error) {
@@ -234,6 +238,121 @@ export const verifyEmail = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: 'Email verified successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Forgot password - Request password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide your email address'
+      });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      // Return success even if user not found (security best practice)
+      return res.status(200).json({
+        status: 'success',
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    // Save reset token to user
+    await user.update({
+      resetPasswordToken: resetToken,
+      resetPasswordExpire: resetTokenExpiry
+    });
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(user, resetToken);
+      console.log('✅ Password reset email sent to:', user.email);
+    } catch (emailError) {
+      console.error('❌ Failed to send password reset email:', emailError.message);
+      // Rollback token if email fails
+      await user.update({
+        resetPasswordToken: null,
+        resetPasswordExpire: null
+      });
+      return res.status(500).json({
+        status: 'error',
+        message: 'Email could not be sent. Please try again later.'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password reset link has been sent to your email'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reset password
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide a new password'
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password must be at least 6 characters'
+      });
+    }
+
+    // Find user with valid reset token
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpire: {
+          [sequelize.Sequelize.Op.gt]: new Date()
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Update password and clear reset token
+    await user.update({
+      password: password, // Will be hashed by beforeUpdate hook
+      resetPasswordToken: null,
+      resetPasswordExpire: null
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Password has been reset successfully. You can now login with your new password.'
     });
   } catch (error) {
     next(error);
