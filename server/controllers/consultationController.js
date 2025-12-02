@@ -1,5 +1,5 @@
 import Consultation from '../models/Consultation.js';
-import { sendConsultationNotification } from '../utils/emailService.js';
+import { sendConsultationNotification, sendConsultationConfirmation } from '../utils/emailService.js';
 
 // @desc    Submit consultation request
 // @route   POST /api/consultations
@@ -8,17 +8,23 @@ export const submitConsultation = async (req, res, next) => {
   try {
     const consultation = await Consultation.create(req.body);
 
-    // Send email notification to admin
-    try {
-      await sendConsultationNotification(consultation);
-    } catch (emailError) {
-      console.error('Failed to send consultation notification:', emailError);
-      // Continue even if email fails
-    }
+    // Send emails to both admin and customer
+    Promise.all([
+      sendConsultationNotification(consultation).catch(err => {
+        console.error('❌ Failed to send consultation notification to admin:', err.message);
+      }),
+      sendConsultationConfirmation(consultation).catch(err => {
+        console.error('❌ Failed to send consultation confirmation to customer:', err.message);
+      })
+    ]).then(() => {
+      console.log('✅ All consultation emails sent successfully');
+    }).catch(err => {
+      console.error('⚠️ Some consultation emails failed to send:', err.message);
+    });
 
     res.status(201).json({
       status: 'success',
-      message: 'Thank you for your consultation request! We will contact you soon.',
+      message: 'Thank you for your consultation request! We will contact you soon. Check your email for confirmation.',
       data: { consultation }
     });
   } catch (error) {

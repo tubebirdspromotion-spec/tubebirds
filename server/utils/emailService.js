@@ -252,10 +252,62 @@ export const sendOrderConfirmation = async (order, user) => {
 };
 
 /**
+ * Send consultation confirmation to customer
+ */
+export const sendConsultationConfirmation = async (consultation) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .details { background: white; padding: 20px; border-radius: 5px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>✅ Consultation Request Received</h1>
+        </div>
+        <div class="content">
+          <h2>Hi ${consultation.name},</h2>
+          <p>Thank you for requesting a free consultation with TubeBirds Promotion!</p>
+          <p>We have received your request and our team will contact you within 24 hours.</p>
+          <div class="details">
+            <h3>Your Request Details:</h3>
+            <p><strong>Service Interest:</strong> ${consultation.serviceInterest}</p>
+            <p><strong>Your Message:</strong></p>
+            <p>${consultation.message}</p>
+            <p><strong>Submitted:</strong> ${new Date(consultation.createdAt).toLocaleString()}</p>
+          </div>
+          <p>If you have any urgent questions, feel free to contact us at:</p>
+          <p><strong>Email:</strong> ${process.env.ADMIN_EMAIL}</p>
+          <p><strong>Phone:</strong> Your contact number</p>
+        </div>
+        <div style="text-align: center; margin-top: 30px; color: #666; font-size: 12px;">
+          <p>&copy; ${new Date().getFullYear()} TubeBirds Promotion. All rights reserved.</p>
+          <p>tubebirdspromotion.com</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  await sendEmail({
+    to: consultation.email,
+    subject: '✅ Consultation Request Received - TubeBirds Promotion',
+    html
+  });
+};
+
+/**
  * Send consultation notification to admin
  */
 export const sendConsultationNotification = async (consultation) => {
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@tubebirdspromotion.com';
+  const adminEmail = process.env.ADMIN_EMAIL || 'contact@tubebirdspromotion.com';
   
   const html = `
     <!DOCTYPE html>
@@ -411,6 +463,7 @@ export default {
   sendWelcomeEmail,
   sendVerificationEmail,
   sendOrderConfirmation,
+  sendConsultationConfirmation,
   sendConsultationNotification,
   sendContactNotification,
   sendPaymentReceipt
