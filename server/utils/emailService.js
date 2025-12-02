@@ -235,7 +235,10 @@ export const sendPaymentReceipt = async (order, payment, user) => {
  * Send password reset email (ACTIVE)
  */
 export const sendPasswordResetEmail = async (user, resetToken) => {
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+  // Handle multiple CLIENT_URLs (comma-separated) - use production URL or first one
+  const clientUrls = process.env.CLIENT_URL.split(',').map(url => url.trim());
+  const clientUrl = clientUrls.find(url => url.includes('vercel.app') || url.includes('tubebirdspromotion.com')) || clientUrls[0];
+  const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
   
   const html = `
     <!DOCTYPE html>
