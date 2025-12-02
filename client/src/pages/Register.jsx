@@ -96,9 +96,9 @@ const Register = () => {
       setTimeout(() => {
         // Navigate based on user role
         if (result?.data?.user?.role === 'admin') {
-          navigate('/admin/dashboard')
+          navigate('/admin')
         } else {
-          navigate('/client/dashboard')
+          navigate('/dashboard')
         }
       }, 500)
     } catch (error) {

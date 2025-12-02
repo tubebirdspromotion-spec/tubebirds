@@ -14,15 +14,18 @@ const getTransporter = () => {
     
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-      port: parseInt(process.env.SMTP_PORT) || 465,
-      secure: true, // SSL/TLS
+      port: parseInt(process.env.SMTP_PORT) || 587,
+      secure: false, // Use STARTTLS (port 587)
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD
       },
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
     
     // Verify connection configuration
