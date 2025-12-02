@@ -192,6 +192,18 @@ const Login = () => {
                   </div>
                 </div>
 
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {/* Remember me checkbox can go here */}
+                  </div>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-medium text-orange-600 hover:text-orange-700 transition-colors duration-200"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

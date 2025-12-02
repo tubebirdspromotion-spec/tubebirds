@@ -15,6 +15,8 @@ import PortfolioPage from './pages/Portfolio'
 import ContactPage from './pages/Contact'
 import LoginPage from './pages/Login'
 import RegisterPage from './pages/Register'
+import ForgotPasswordPage from './pages/ForgotPassword'
+import ResetPasswordPage from './pages/ResetPassword'
 import CheckoutPage from './pages/Checkout'
 
 // Policy Pages
@@ -100,6 +102,8 @@ function App() {
         <Route path="contact" element={<ContactPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
+        <Route path="forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="reset-password/:token" element={<ResetPasswordPage />} />
         
         {/* Policy Pages */}
         <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
