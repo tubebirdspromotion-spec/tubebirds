@@ -26,7 +26,7 @@ const ForgotPassword = () => {
 
     try {
       setIsSubmitting(true)
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email })
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, { email })
       
       setEmailSent(true)
       toast.success('Password reset link sent to your email!')
