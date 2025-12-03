@@ -57,25 +57,34 @@ export const createRazorpayOrder = async (req, res, next) => {
 
     // If not found and planDetails provided, use planDetails
     if (!pricing && planDetails) {
-      // Map category to serviceId
-      const categoryServiceMap = {
-        'views': 1,
-        'subscribers': 2,
-        'monetization': 3,
-        'revenue': 4
+      // Map category to service slug
+      const categoryServiceSlugMap = {
+        'views': 'youtube-views',
+        'subscribers': 'youtube-subscribers',
+        'monetization': 'youtube-monetization',
+        'revenue': 'youtube-revenue'
       };
       
-      serviceId = categoryServiceMap[planDetails.category] || 1;
+      const serviceSlug = categoryServiceSlugMap[planDetails.category] || 'youtube-views';
       
-      // Find or use default service
-      const service = await Service.findByPk(serviceId);
+      // Find service by slug (more reliable than ID)
+      const service = await Service.findOne({ where: { slug: serviceSlug } });
+      
+      if (!service) {
+        return res.status(500).json({
+          status: 'error',
+          message: 'Service not found. Please contact support or run database sync.'
+        });
+      }
+      
+      serviceId = service.id;
       
       pricing = {
         price: parseFloat(planDetails.price),
         quantity: planDetails.quantity || planDetails.views || '0',
         planName: planDetails.name,
         serviceId: serviceId,
-        service: service || { id: serviceId, name: 'YouTube Service' }
+        service: service
       };
     }
 
