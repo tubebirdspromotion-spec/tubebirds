@@ -126,47 +126,73 @@ const seedDatabase = async () => {
     // ============================================
     const pricingPlans = [];
     
-    // YouTube Views Pricing
+    // YouTube Views Pricing - Matches Frontend
     const viewService = services.find(s => s.slug === 'youtube-views');
     pricingPlans.push(...await Pricing.bulkCreate([
       {
         serviceId: viewService.id,
         planName: 'Starter Views',
-        quantity: '1000 Views',
-        price: 299,
-        originalPrice: 499,
-        discount: 40,
+        quantity: '5,000+ Views',
+        price: 750,
+        originalPrice: 1500,
+        discount: 50,
         category: 'youtube-views',
-        deliveryTime: '1-3 days',
-        features: JSON.stringify(['Real users', 'High retention', 'Gradual delivery', '24/7 support']),
+        deliveryTime: '5-7 days',
+        features: JSON.stringify(['5,000+ Real YouTube Views', '100% Safe & Organic', 'Gradual Delivery (Natural Growth)', 'No Password Required', 'Retention Rate: 60-80%', 'Start Time: 12-24 Hours', 'Completion: 5-7 Days', '24/7 Customer Support']),
         isPopular: false,
         order: 1
       },
       {
         serviceId: viewService.id,
-        planName: 'Growth Views',
-        quantity: '5000 Views',
-        price: 1299,
-        originalPrice: 2199,
-        discount: 41,
+        planName: 'Growth Booster',
+        quantity: '10,000+ Views',
+        price: 1500,
+        originalPrice: 3000,
+        discount: 50,
         category: 'youtube-views',
-        deliveryTime: '3-5 days',
-        features: JSON.stringify(['Real users', 'High retention', 'Gradual delivery', '24/7 support', 'Priority processing']),
+        deliveryTime: '7-10 days',
+        features: JSON.stringify(['10,000+ Real YouTube Views', '100% Safe & Organic', 'Natural Delivery Pattern', 'High Retention Rate: 70-85%', 'Boost Search Rankings', 'Start Time: 6-12 Hours', 'Completion: 7-10 Days', 'Priority Support']),
         isPopular: true,
         order: 2
       },
       {
         serviceId: viewService.id,
-        planName: 'Pro Views',
-        quantity: '10000 Views',
-        price: 2399,
-        originalPrice: 3999,
-        discount: 40,
+        planName: 'Pro Package',
+        quantity: '20,000+ Views',
+        price: 2600,
+        originalPrice: 5200,
+        discount: 50,
         category: 'youtube-views',
-        deliveryTime: '5-7 days',
-        features: JSON.stringify(['Real users', 'High retention', 'Gradual delivery', '24/7 support', 'Priority processing', 'Refill guarantee']),
+        deliveryTime: '10-14 days',
+        features: JSON.stringify(['20,000+ Real YouTube Views', 'Premium Quality Views', 'High Retention: 75-90%', 'Faster Delivery', 'Improved Channel Authority', 'Start Time: 3-6 Hours', 'Completion: 10-14 Days', 'Dedicated Account Manager']),
         isPopular: false,
         order: 3
+      },
+      {
+        serviceId: viewService.id,
+        planName: 'Elite Package',
+        quantity: '50,000+ Views',
+        price: 5500,
+        originalPrice: 11000,
+        discount: 50,
+        category: 'youtube-views',
+        deliveryTime: '14-20 days',
+        features: JSON.stringify(['50,000+ Real YouTube Views', 'Premium Elite Quality', 'Maximum Retention: 80-95%', 'Rapid Delivery', 'Massive Reach Expansion', 'Viral Potential Boost', 'Start Time: 1-3 Hours', 'Completion: 14-20 Days']),
+        isPopular: true,
+        order: 4
+      },
+      {
+        serviceId: viewService.id,
+        planName: 'Mega Viral',
+        quantity: '1 Lakh+ Views',
+        price: 10000,
+        originalPrice: 20000,
+        discount: 50,
+        category: 'youtube-views',
+        deliveryTime: '20-30 days',
+        features: JSON.stringify(['1,00,000+ Real YouTube Views', 'Ultra Premium Quality', 'Extreme Retention: 85-98%', 'Express Delivery', 'Trending Page Potential', 'Algorithm Boost', 'Start Time: Instant', 'Completion: 20-30 Days']),
+        isPopular: false,
+        order: 5
       }
     ]));
 

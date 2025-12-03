@@ -186,15 +186,24 @@ const Checkout = () => {
     setIsSubmitting(true)
     
     try {
+      console.log('💳 Creating payment order with plan:', plan)
+      
       // Create Razorpay order on server
       const response = await api.post('/payment/create-order', {
-        pricingId: plan.id,
+        pricingId: typeof plan.id === 'number' ? plan.id : null, // Only send if numeric DB ID
+        planDetails: {
+          name: plan.name,
+          price: parseFloat(plan.price),
+          quantity: plan.quantity || plan.views,
+          category: plan.category
+        },
         videoUrl: formData.videoUrl,
         channelName: formData.channelName || '',
         channelUrl: formData.channelUrl || ''
       })
 
       const orderData = response.data.data
+      console.log('✅ Order created:', orderData)
 
       // Open Razorpay checkout
       await handlePayment(orderData)

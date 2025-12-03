@@ -23,10 +23,10 @@ export const createRazorpayOrder = async (req, res, next) => {
       });
     }
 
-    const { pricingId, videoUrl, channelName, channelUrl } = req.body;
+    const { pricingId, videoUrl, channelName, channelUrl, planDetails } = req.body;
 
     // Validate required fields
-    if (!pricingId || !videoUrl) {
+    if ((!pricingId && !planDetails) || !videoUrl) {
       return res.status(400).json({
         status: 'error',
         message: 'Pricing plan and YouTube video URL are required'
@@ -41,15 +41,30 @@ export const createRazorpayOrder = async (req, res, next) => {
       });
     }
 
-    // Get pricing details
-    const pricing = await Pricing.findByPk(pricingId, {
-      include: [{
-        model: Service,
-        as: 'service'
-      }]
-    });
+    let pricing;
+    let serviceId = 1; // Default YouTube Views service
+    
+    // Try to get pricing from database first
+    if (pricingId) {
+      pricing = await Pricing.findByPk(pricingId, {
+        include: [{
+          model: Service,
+          as: 'service'
+        }]
+      });
+    }
 
-    if (!pricing) {
+    // If not found and planDetails provided, use planDetails
+    if (!pricing && planDetails) {
+      pricing = {
+        price: parseFloat(planDetails.price),
+        quantity: planDetails.quantity || planDetails.views || '0',
+        planName: planDetails.name,
+        serviceId: serviceId
+      };
+    }
+
+    if (!pricing || !pricing.price) {
       return res.status(404).json({
         status: 'error',
         message: 'Pricing plan not found'
@@ -60,7 +75,7 @@ export const createRazorpayOrder = async (req, res, next) => {
     const gstCalculation = razorpayService.calculateGST(pricing.price, 18);
 
     // Extract quantity from pricing.quantity string
-    const targetQuantity = parseInt(pricing.quantity.replace(/[^0-9]/g, '')) || 0;
+    const targetQuantity = parseInt(String(pricing.quantity).replace(/[^0-9]/g, '')) || 0;
 
     // Extract YouTube video ID
     const videoId = razorpayService.extractYouTubeVideoId(videoUrl);

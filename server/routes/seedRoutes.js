@@ -3,25 +3,16 @@ import User from '../models/User.js';
 import Service from '../models/Service.js';
 import Pricing from '../models/Pricing.js';
 import Portfolio from '../models/Portfolio.js';
+import { protect, authorize } from '../middleware/auth.js';
 import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
-// @desc    Seed database
+// @desc    Seed database (Secure - Admin only)
 // @route   POST /api/seed/initialize
-// @access  Public (protected by secret key)
-router.post('/initialize', async (req, res) => {
+// @access  Private/Admin
+router.post('/initialize', protect, authorize('admin'), async (req, res) => {
   try {
-    const { secretKey } = req.body;
-    
-    // Security check - must provide secret key
-    if (secretKey !== 'tubebirds_seed_2025_secret') {
-      return res.status(403).json({
-        status: 'error',
-        message: 'Invalid secret key'
-      });
-    }
-
     console.log('🌱 Starting database seed via API...');
 
     // Check if admin already exists
