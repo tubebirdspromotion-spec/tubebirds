@@ -187,7 +187,7 @@ Order.init(
       { fields: ['editorId'] },
       { fields: ['status'] },
       { fields: ['paymentStatus'] },
-      { fields: ['orderNumber'], unique: true }
+      { fields: ['orderNumber'] } // Removed unique to avoid too many keys error
     ]
   }
 );

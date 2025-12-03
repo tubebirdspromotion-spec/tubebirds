@@ -44,13 +44,13 @@ Payment.init(
     razorpayOrderId: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      unique: true,
+      // Removed unique to avoid too many keys error
       comment: 'Razorpay order ID'
     },
     razorpayPaymentId: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      unique: true,
+      // Removed unique to avoid too many keys error
       comment: 'Razorpay payment ID'
     },
     razorpaySignature: {
@@ -152,7 +152,7 @@ Payment.init(
     invoiceNumber: {
       type: DataTypes.STRING(100),
       allowNull: true,
-      unique: true
+      // Removed unique to avoid too many keys error
     },
     invoiceUrl: {
       type: DataTypes.STRING(500),

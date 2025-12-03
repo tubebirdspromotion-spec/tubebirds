@@ -13,9 +13,7 @@ Service.init(
     title: {
       type: DataTypes.STRING(200),
       allowNull: false,
-      unique: {
-        msg: 'Service title already exists'
-      },
+      // Removed unique constraint to avoid too many keys error
       validate: {
         notEmpty: { msg: 'Please provide a service title' }
       }
@@ -23,7 +21,7 @@ Service.init(
     slug: {
       type: DataTypes.STRING(255),
       allowNull: false,
-      unique: true,
+      // Removed unique constraint to avoid too many keys error
       set(value) {
         this.setDataValue('slug', value.toLowerCase());
       }

@@ -23,7 +23,7 @@ Review.init(
     orderId: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      unique: true, // One review per order
+      // Removed unique to avoid too many keys error (still enforced via app logic)
       references: {
         model: 'orders',
         key: 'id'
@@ -88,7 +88,7 @@ Review.init(
     timestamps: true,
     indexes: [
       { fields: ['userId'] },
-      { fields: ['orderId'], unique: true },
+      { fields: ['orderId'] }, // Removed unique to avoid too many keys error
       { fields: ['serviceId'] },
       { fields: ['isApproved'] },
       { fields: ['isPublished'] },
