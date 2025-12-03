@@ -48,6 +48,7 @@ const Checkout = () => {
   useEffect(() => {
     // Get plan from location state
     if (location.state?.plan) {
+      console.log('📦 Checkout: Plan received from location.state:', location.state.plan)
       setPlan(location.state.plan)
       // Calculate GST
       const baseAmount = parseFloat(location.state.plan.price) / 1.18
@@ -58,26 +59,17 @@ const Checkout = () => {
         gstRate: 18,
         totalAmount: parseFloat(location.state.plan.price).toFixed(2)
       })
-    } else if (!plan) {
-      toast.error('No plan selected')
+    } else {
+      console.log('❌ Checkout: No plan in location.state, redirecting to pricing')
+      toast.error('No plan selected. Please select a plan first.')
       navigate('/pricing')
-      return
     }
-  }, [location.state, navigate, plan])
+  }, [location.state, navigate])
 
   useEffect(() => {
-    // Check authentication only once
-    if (!hasCheckedAuth) {
-      const hasToken = localStorage.getItem('token') || token
-      
-      if (!hasToken && !isAuthenticated) {
-        toast.error('Please login to continue')
-        navigate('/login', { state: { from: location } })
-      }
-      
-      setHasCheckedAuth(true)
-    }
-  }, [hasCheckedAuth, isAuthenticated, token, navigate, location])
+    // Set auth check as complete since ProtectedRoute handles authentication
+    setHasCheckedAuth(true)
+  }, [])
 
   const validateYoutubeUrl = (url) => {
     const patterns = [

@@ -110,17 +110,17 @@ function App() {
         <Route path="terms-conditions" element={<TermsConditionsPage />} />
         <Route path="refund-policy" element={<RefundPolicyPage />} />
         <Route path="disclaimer" element={<DisclaimerPage />} />
+        
+        {/* Checkout Route - Protected */}
+        <Route
+          path="checkout"
+          element={
+            <ProtectedRoute allowedRoles={['client', 'admin']}>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
-
-      {/* Checkout Route - Protected */}
-      <Route
-        path="/checkout"
-        element={
-          <ProtectedRoute allowedRoles={['client', 'admin']}>
-            <CheckoutPage />
-          </ProtectedRoute>
-        }
-      />
 
       {/* Client Dashboard Routes */}
       <Route
