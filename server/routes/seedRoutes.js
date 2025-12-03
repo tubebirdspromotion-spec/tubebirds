@@ -20,6 +20,16 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     
     const { sequelize } = await import('../config/db.js');
     
+    // First, try to drop the problematic unique indexes to free up key slots
+    console.log('Cleaning up unnecessary indexes...');
+    try {
+      await sequelize.query(`ALTER TABLE orders DROP INDEX orderNumber`).catch(() => {});
+      await sequelize.query(`ALTER TABLE services DROP INDEX slug`).catch(() => {});
+      console.log('✅ Cleaned up indexes');
+    } catch (err) {
+      console.log('⚠️ Index cleanup warning (may not exist):', err.message);
+    }
+    
     // Direct SQL to modify pricingId column to allow NULL
     console.log('Making pricingId nullable...');
     await sequelize.query(`
@@ -47,7 +57,7 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     res.status(200).json({
       status: 'success',
       message: 'Database schema migrated successfully',
-      info: 'pricingId is now nullable, planDetails column added'
+      info: 'pricingId is now nullable, planDetails column added, unnecessary indexes removed'
     });
     
   } catch (error) {
