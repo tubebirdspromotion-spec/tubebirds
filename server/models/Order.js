@@ -20,7 +20,8 @@ Order.init(
     orderNumber: {
       type: DataTypes.STRING(50),
       allowNull: false,
-      unique: true
+      // Removed unique constraint to avoid "too many keys" error in production
+      // Order numbers are still generated uniquely via generateOrderNumber()
     },
     userId: {
       type: DataTypes.INTEGER,
