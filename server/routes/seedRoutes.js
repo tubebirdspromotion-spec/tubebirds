@@ -8,6 +8,133 @@ import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
+// @desc    Sync pricing plans only (Update/Insert)
+// @route   POST /api/seed/sync-pricing
+// @access  Private/Admin
+router.post('/sync-pricing', protect, authorize('admin'), async (req, res) => {
+  try {
+    console.log('🔄 Syncing pricing plans...');
+
+    // Get or create YouTube Views service
+    let viewService = await Service.findOne({ where: { slug: 'youtube-views' } });
+    if (!viewService) {
+      viewService = await Service.create({
+        name: 'YouTube Views',
+        slug: 'youtube-views',
+        category: 'youtube',
+        description: 'Boost your video visibility with real, high-retention YouTube views',
+        icon: 'eye',
+        order: 1,
+        isActive: true,
+        isFeatured: true
+      });
+    }
+
+    // Pricing plans to sync (matches frontend)
+    const pricingData = [
+      {
+        planName: 'Starter Views',
+        quantity: '5,000+ Views',
+        price: 750,
+        originalPrice: 1500,
+        discount: 50,
+        deliveryTime: '5-7 days',
+        features: JSON.stringify(['5,000+ Real YouTube Views', '100% Safe & Organic', 'Gradual Delivery (Natural Growth)', 'No Password Required', 'Retention Rate: 60-80%', 'Start Time: 12-24 Hours', 'Completion: 5-7 Days', '24/7 Customer Support']),
+        isPopular: false,
+        order: 1
+      },
+      {
+        planName: 'Growth Booster',
+        quantity: '10,000+ Views',
+        price: 1500,
+        originalPrice: 3000,
+        discount: 50,
+        deliveryTime: '7-10 days',
+        features: JSON.stringify(['10,000+ Real YouTube Views', '100% Safe & Organic', 'Natural Delivery Pattern', 'High Retention Rate: 70-85%', 'Boost Search Rankings', 'Start Time: 6-12 Hours', 'Completion: 7-10 Days', 'Priority Support']),
+        isPopular: true,
+        order: 2
+      },
+      {
+        planName: 'Pro Package',
+        quantity: '20,000+ Views',
+        price: 2600,
+        originalPrice: 5200,
+        discount: 50,
+        deliveryTime: '10-14 days',
+        features: JSON.stringify(['20,000+ Real YouTube Views', 'Premium Quality Views', 'High Retention: 75-90%', 'Faster Delivery', 'Improved Channel Authority', 'Start Time: 3-6 Hours', 'Completion: 10-14 Days', 'Dedicated Account Manager']),
+        isPopular: false,
+        order: 3
+      },
+      {
+        planName: 'Elite Package',
+        quantity: '50,000+ Views',
+        price: 5500,
+        originalPrice: 11000,
+        discount: 50,
+        deliveryTime: '14-20 days',
+        features: JSON.stringify(['50,000+ Real YouTube Views', 'Premium Elite Quality', 'Maximum Retention: 80-95%', 'Rapid Delivery', 'Massive Reach Expansion', 'Viral Potential Boost', 'Start Time: 1-3 Hours', 'Completion: 14-20 Days']),
+        isPopular: true,
+        order: 4
+      },
+      {
+        planName: 'Mega Viral',
+        quantity: '1 Lakh+ Views',
+        price: 10000,
+        originalPrice: 20000,
+        discount: 50,
+        deliveryTime: '20-30 days',
+        features: JSON.stringify(['1,00,000+ Real YouTube Views', 'Ultra Premium Quality', 'Extreme Retention: 85-98%', 'Express Delivery', 'Trending Page Potential', 'Algorithm Boost', 'Start Time: Instant', 'Completion: 20-30 Days']),
+        isPopular: false,
+        order: 5
+      }
+    ];
+
+    let created = 0;
+    let updated = 0;
+
+    for (const planData of pricingData) {
+      const [plan, wasCreated] = await Pricing.findOrCreate({
+        where: { 
+          serviceId: viewService.id,
+          planName: planData.planName 
+        },
+        defaults: {
+          ...planData,
+          serviceId: viewService.id,
+          category: 'youtube-views'
+        }
+      });
+
+      if (!wasCreated) {
+        // Update existing plan
+        await plan.update(planData);
+        updated++;
+      } else {
+        created++;
+      }
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Pricing plans synced successfully',
+      data: {
+        service: viewService.name,
+        created,
+        updated,
+        total: created + updated
+      }
+    });
+
+  } catch (error) {
+    console.error('Sync error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to sync pricing plans',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Seed database (Secure - Admin only)
 // @route   POST /api/seed/initialize
 // @access  Private/Admin
