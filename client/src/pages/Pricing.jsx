@@ -607,10 +607,13 @@ const Pricing = () => {
   }
 
   const handleOrderNow = (plan) => {
+    console.log('🛒 Buy Now clicked:', { plan, isAuthenticated, user, token: !!token })
+    
     // Check authentication more thoroughly
     const hasToken = localStorage.getItem('token') || token
     
     if (!isAuthenticated && !hasToken) {
+      console.log('❌ No authentication, redirecting to login')
       toast.error('Please login to place an order')
       navigate('/login', { state: { returnTo: '/pricing' } })
       return
@@ -618,6 +621,7 @@ const Pricing = () => {
     
     // If we have token but no user data loaded, show message
     if (hasToken && !user) {
+      console.log('⏳ Token exists but user not loaded, retrying...')
       toast.loading('Loading your account...', { duration: 1000 })
       setTimeout(() => {
         handleOrderNow(plan) // Retry after user loads
@@ -625,13 +629,22 @@ const Pricing = () => {
       return
     }
     
-    // Add category to plan data
+    // Extract only serializable data (remove React components/icons)
     const planWithCategory = {
-      ...plan,
+      id: plan.id,
+      name: plan.name,
+      price: plan.price,
+      originalPrice: plan.originalPrice,
+      discount: plan.discount,
+      views: plan.views,
+      features: plan.features,
+      popular: plan.popular,
       category: selectedCategory,
       pricingId: plan.id,
-      serviceId: 1 // Default service ID, you can map categories to service IDs if needed
+      serviceId: 1
     }
+    
+    console.log('✅ Navigating to checkout with plan:', planWithCategory)
     
     // Navigate to checkout with plan data
     toast.success('Redirecting to checkout...')
