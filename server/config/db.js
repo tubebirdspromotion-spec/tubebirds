@@ -24,6 +24,9 @@ const sequelize = new Sequelize(
     // Timezone configuration
     timezone: '+05:30', // IST timezone (adjust as needed)
     
+    // Prevent automatic sync in production
+    sync: process.env.NODE_ENV === 'production' ? { force: false, alter: false } : undefined,
+    
     // Define options for all models
     define: {
       timestamps: true,           // Add createdAt and updatedAt
