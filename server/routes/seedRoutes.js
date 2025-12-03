@@ -19,15 +19,21 @@ router.post('/sync-pricing', protect, authorize('admin'), async (req, res) => {
     let viewService = await Service.findOne({ where: { slug: 'youtube-views' } });
     if (!viewService) {
       viewService = await Service.create({
-        name: 'YouTube Views',
+        title: 'YouTube Views',
         slug: 'youtube-views',
+        description: 'Boost your video visibility with real, high-retention YouTube views from genuine users. Our view packages help increase your video\'s reach, improve search rankings, and attract more organic traffic to your content.',
+        shortDescription: 'Boost your video visibility with real, high-retention YouTube views',
+        icon: 'FaEye',
+        features: JSON.stringify(['Real users, not bots', 'High retention rate (60-95%)', 'Gradual delivery for safety', '24/7 customer support', 'Money-back guarantee']),
+        benefits: JSON.stringify(['Improve video ranking', 'Increase organic reach', 'Build social proof', 'Boost credibility']),
         category: 'youtube',
-        description: 'Boost your video visibility with real, high-retention YouTube views',
-        icon: 'eye',
         order: 1,
         isActive: true,
         isFeatured: true
       });
+      console.log('✅ Created YouTube Views service');
+    } else {
+      console.log('✅ YouTube Views service already exists');
     }
 
     // Pricing plans to sync (matches frontend)
