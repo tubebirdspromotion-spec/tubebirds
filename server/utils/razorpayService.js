@@ -82,8 +82,10 @@ class RazorpayService {
       
       return razorpayOrder;
     } catch (error) {
-      console.error('❌ Failed to create Razorpay order:', error.message);
-      throw new Error(`Failed to create payment order: ${error.message}`);
+      console.error('❌ Failed to create Razorpay order:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      const errorMessage = error.error?.description || error.message || 'Unknown error occurred';
+      throw new Error(`Failed to create payment order: ${errorMessage}`);
     }
   }
 
