@@ -8,126 +8,169 @@ import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
-// @desc    Sync pricing plans only (Update/Insert)
+// @desc    Sync ALL pricing plans (Views, Subscribers, Monetization, Revenue)
 // @route   POST /api/seed/sync-pricing
 // @access  Private/Admin
 router.post('/sync-pricing', protect, authorize('admin'), async (req, res) => {
   try {
-    console.log('🔄 Syncing pricing plans...');
+    console.log('🔄 Syncing ALL pricing plans...');
 
-    // Get or create YouTube Views service
+    let totalCreated = 0;
+    let totalUpdated = 0;
+    const results = {};
+
+    // ==================== YOUTUBE VIEWS SERVICE ====================
     let viewService = await Service.findOne({ where: { slug: 'youtube-views' } });
     if (!viewService) {
       viewService = await Service.create({
         title: 'YouTube Views',
         slug: 'youtube-views',
-        description: 'Boost your video visibility with real, high-retention YouTube views from genuine users. Our view packages help increase your video\'s reach, improve search rankings, and attract more organic traffic to your content.',
+        description: 'Boost your video visibility with real, high-retention YouTube views from genuine users.',
         shortDescription: 'Boost your video visibility with real, high-retention YouTube views',
         icon: 'FaEye',
-        features: JSON.stringify(['Real users, not bots', 'High retention rate (60-95%)', 'Gradual delivery for safety', '24/7 customer support', 'Money-back guarantee']),
-        benefits: JSON.stringify(['Improve video ranking', 'Increase organic reach', 'Build social proof', 'Boost credibility']),
+        features: JSON.stringify(['Real users, not bots', 'High retention rate', 'Gradual delivery', '24/7 support']),
+        benefits: JSON.stringify(['Improve ranking', 'Increase reach', 'Build social proof', 'Boost credibility']),
         category: 'youtube',
         order: 1,
         isActive: true,
         isFeatured: true
       });
-      console.log('✅ Created YouTube Views service');
-    } else {
-      console.log('✅ YouTube Views service already exists');
     }
 
-    // Pricing plans to sync (matches frontend)
-    const pricingData = [
-      {
-        planName: 'Starter Views',
-        quantity: '5,000+ Views',
-        price: 750,
-        originalPrice: 1500,
-        discount: 50,
-        deliveryTime: '5-7 days',
-        features: JSON.stringify(['5,000+ Real YouTube Views', '100% Safe & Organic', 'Gradual Delivery (Natural Growth)', 'No Password Required', 'Retention Rate: 60-80%', 'Start Time: 12-24 Hours', 'Completion: 5-7 Days', '24/7 Customer Support']),
-        isPopular: false,
-        order: 1
-      },
-      {
-        planName: 'Growth Booster',
-        quantity: '10,000+ Views',
-        price: 1500,
-        originalPrice: 3000,
-        discount: 50,
-        deliveryTime: '7-10 days',
-        features: JSON.stringify(['10,000+ Real YouTube Views', '100% Safe & Organic', 'Natural Delivery Pattern', 'High Retention Rate: 70-85%', 'Boost Search Rankings', 'Start Time: 6-12 Hours', 'Completion: 7-10 Days', 'Priority Support']),
-        isPopular: true,
-        order: 2
-      },
-      {
-        planName: 'Pro Package',
-        quantity: '20,000+ Views',
-        price: 2600,
-        originalPrice: 5200,
-        discount: 50,
-        deliveryTime: '10-14 days',
-        features: JSON.stringify(['20,000+ Real YouTube Views', 'Premium Quality Views', 'High Retention: 75-90%', 'Faster Delivery', 'Improved Channel Authority', 'Start Time: 3-6 Hours', 'Completion: 10-14 Days', 'Dedicated Account Manager']),
-        isPopular: false,
-        order: 3
-      },
-      {
-        planName: 'Elite Package',
-        quantity: '50,000+ Views',
-        price: 5500,
-        originalPrice: 11000,
-        discount: 50,
-        deliveryTime: '14-20 days',
-        features: JSON.stringify(['50,000+ Real YouTube Views', 'Premium Elite Quality', 'Maximum Retention: 80-95%', 'Rapid Delivery', 'Massive Reach Expansion', 'Viral Potential Boost', 'Start Time: 1-3 Hours', 'Completion: 14-20 Days']),
-        isPopular: true,
-        order: 4
-      },
-      {
-        planName: 'Mega Viral',
-        quantity: '1 Lakh+ Views',
-        price: 10000,
-        originalPrice: 20000,
-        discount: 50,
-        deliveryTime: '20-30 days',
-        features: JSON.stringify(['1,00,000+ Real YouTube Views', 'Ultra Premium Quality', 'Extreme Retention: 85-98%', 'Express Delivery', 'Trending Page Potential', 'Algorithm Boost', 'Start Time: Instant', 'Completion: 20-30 Days']),
-        isPopular: false,
-        order: 5
-      }
+    const viewsPlans = [
+      { planName: 'Starter Views', quantity: '5,000+ Views', price: 750, originalPrice: 1500, discount: 50, deliveryTime: '5-7 days', features: JSON.stringify(['5,000+ Real YouTube Views', '100% Safe & Organic', 'Gradual Delivery', 'Retention Rate: 60-80%', 'Start Time: 12-24 Hours', '24/7 Customer Support']), isPopular: false, order: 1 },
+      { planName: 'Growth Booster', quantity: '10,000+ Views', price: 1500, originalPrice: 3000, discount: 50, deliveryTime: '7-10 days', features: JSON.stringify(['10,000+ Real YouTube Views', 'Natural Delivery Pattern', 'High Retention: 70-85%', 'Boost Search Rankings', 'Priority Support']), isPopular: true, order: 2 },
+      { planName: 'Pro Package', quantity: '20,000+ Views', price: 2600, originalPrice: 5200, discount: 50, deliveryTime: '10-14 days', features: JSON.stringify(['20,000+ Real YouTube Views', 'Premium Quality', 'High Retention: 75-90%', 'Improved Channel Authority', 'Dedicated Account Manager']), isPopular: false, order: 3 },
+      { planName: 'Elite Package', quantity: '50,000+ Views', price: 5500, originalPrice: 11000, discount: 50, deliveryTime: '14-20 days', features: JSON.stringify(['50,000+ Real YouTube Views', 'Maximum Retention: 80-95%', 'Massive Reach Expansion', 'Viral Potential Boost']), isPopular: true, order: 4 },
+      { planName: 'Mega Viral', quantity: '1 Lakh+ Views', price: 10000, originalPrice: 20000, discount: 50, deliveryTime: '20-30 days', features: JSON.stringify(['1,00,000+ Real YouTube Views', 'Extreme Retention: 85-98%', 'Trending Page Potential', 'Algorithm Boost']), isPopular: false, order: 5 }
     ];
 
-    let created = 0;
-    let updated = 0;
-
-    for (const planData of pricingData) {
+    let created = 0, updated = 0;
+    for (const planData of viewsPlans) {
       const [plan, wasCreated] = await Pricing.findOrCreate({
-        where: { 
-          serviceId: viewService.id,
-          planName: planData.planName 
-        },
-        defaults: {
-          ...planData,
-          serviceId: viewService.id,
-          category: 'youtube-views'
-        }
+        where: { serviceId: viewService.id, planName: planData.planName },
+        defaults: { ...planData, serviceId: viewService.id, category: 'youtube-views' }
       });
-
-      if (!wasCreated) {
-        // Update existing plan
-        await plan.update(planData);
-        updated++;
-      } else {
-        created++;
-      }
+      if (!wasCreated) { await plan.update(planData); updated++; } else { created++; }
     }
+    results.views = { created, updated, total: created + updated };
+    totalCreated += created; totalUpdated += updated;
+
+    // ==================== YOUTUBE SUBSCRIBERS SERVICE ====================
+    let subsService = await Service.findOne({ where: { slug: 'youtube-subscribers' } });
+    if (!subsService) {
+      subsService = await Service.create({
+        title: 'YouTube Subscribers',
+        slug: 'youtube-subscribers',
+        description: 'Grow your YouTube family with real, engaged subscribers who genuinely love your content.',
+        shortDescription: 'Grow your channel with genuine YouTube subscribers',
+        icon: 'FaUsers',
+        features: JSON.stringify(['Real subscribers', 'Permanent', 'No password needed', 'Safe delivery']),
+        benefits: JSON.stringify(['Grow channel authority', 'Unlock monetization', 'Increase engagement', 'Build community']),
+        category: 'youtube',
+        order: 2,
+        isActive: true,
+        isFeatured: true
+      });
+    }
+
+    const subscribersPlans = [
+      { planName: 'Bronze Community', quantity: '100 Subscribers', price: 500, originalPrice: 1000, discount: 50, deliveryTime: '3-5 days', features: JSON.stringify(['100 Real YouTube Subscribers', '100% Safe & Permanent', 'Active & Engaged Users', 'No Password Required', 'Lifetime Guarantee']), isPopular: false, order: 1 },
+      { planName: 'Silver Community', quantity: '200 Subscribers', price: 1000, originalPrice: 2000, discount: 50, deliveryTime: '5-7 days', features: JSON.stringify(['200 Real YouTube Subscribers', 'High-Quality Active Users', 'Permanent & Safe', 'Engagement Boost', 'Priority Support']), isPopular: true, order: 2 },
+      { planName: 'Gold Community', quantity: '500 Subscribers', price: 2000, originalPrice: 4000, discount: 50, deliveryTime: '7-10 days', features: JSON.stringify(['500 Real YouTube Subscribers', 'Premium Quality Members', 'High Engagement Rate', 'Channel Authority Boost']), isPopular: true, order: 3 },
+      { planName: 'Platinum Elite', quantity: '1000 Subscribers', price: 3500, originalPrice: 7000, discount: 50, deliveryTime: '10-15 days', features: JSON.stringify(['1000 Real YouTube Subscribers', 'VIP Quality', 'Maximum Engagement', 'Unlock Monetization']), isPopular: false, order: 4 },
+      { planName: 'Diamond Authority', quantity: '5000 Subscribers', price: 15000, originalPrice: 30000, discount: 50, deliveryTime: '20-30 days', features: JSON.stringify(['5000 Real YouTube Subscribers', 'Elite Authority Status', 'Massive Community Growth', 'Premium VIP Support']), isPopular: false, order: 5 }
+    ];
+
+    created = 0; updated = 0;
+    for (const planData of subscribersPlans) {
+      const [plan, wasCreated] = await Pricing.findOrCreate({
+        where: { serviceId: subsService.id, planName: planData.planName },
+        defaults: { ...planData, serviceId: subsService.id, category: 'youtube-subscribers' }
+      });
+      if (!wasCreated) { await plan.update(planData); updated++; } else { created++; }
+    }
+    results.subscribers = { created, updated, total: created + updated };
+    totalCreated += created; totalUpdated += updated;
+
+    // ==================== MONETIZATION SERVICE ====================
+    let monService = await Service.findOne({ where: { slug: 'youtube-monetization' } });
+    if (!monService) {
+      monService = await Service.create({
+        title: 'YouTube Monetization',
+        slug: 'youtube-monetization',
+        description: 'Meet YouTube Partner Program requirements with watch hours and subscribers.',
+        shortDescription: 'Unlock YouTube monetization with watch hours & subscribers',
+        icon: 'FaMoneyBillWave',
+        features: JSON.stringify(['Meet YPP requirements', '4000 watch hours', '1000 subscribers', '100% safe']),
+        benefits: JSON.stringify(['Enable monetization', 'Start earning', 'Join YPP', 'Grow revenue']),
+        category: 'monetization',
+        order: 3,
+        isActive: true,
+        isFeatured: true
+      });
+    }
+
+    const monetizationPlans = [
+      { planName: 'Monetization Starter', quantity: '4000 Watch Hours + 1000 Subs', price: 12000, originalPrice: 24000, discount: 50, deliveryTime: '30-45 days', features: JSON.stringify(['4000 Public Watch Hours', '1000 Real Subscribers', 'Meet YPP Requirements', 'Enable Monetization', '100% Safe Method']), isPopular: true, order: 1 },
+      { planName: 'Fast Track Monetization', quantity: '4000 Hours + 1500 Subs', price: 16000, originalPrice: 32000, discount: 50, deliveryTime: '25-35 days', features: JSON.stringify(['4000+ Watch Hours', '1500 Real Subscribers', 'Faster Processing', 'YPP Ready', 'Premium Support']), isPopular: true, order: 2 },
+      { planName: 'Premium Monetization', quantity: '6000 Hours + 2000 Subs', price: 22000, originalPrice: 44000, discount: 50, deliveryTime: '35-50 days', features: JSON.stringify(['6000+ Watch Hours', '2000 Real Subscribers', 'Premium Package', 'Advanced Growth', 'VIP Support']), isPopular: false, order: 3 }
+    ];
+
+    created = 0; updated = 0;
+    for (const planData of monetizationPlans) {
+      const [plan, wasCreated] = await Pricing.findOrCreate({
+        where: { serviceId: monService.id, planName: planData.planName },
+        defaults: { ...planData, serviceId: monService.id, category: 'youtube-monetization' }
+      });
+      if (!wasCreated) { await plan.update(planData); updated++; } else { created++; }
+    }
+    results.monetization = { created, updated, total: created + updated };
+    totalCreated += created; totalUpdated += updated;
+
+    // ==================== REVENUE SERVICE ====================
+    let revService = await Service.findOne({ where: { slug: 'youtube-revenue' } });
+    if (!revService) {
+      revService = await Service.create({
+        title: 'YouTube Revenue Boost',
+        slug: 'youtube-revenue',
+        description: 'Maximize your YouTube revenue with strategic growth and engagement.',
+        shortDescription: 'Maximize YouTube revenue with strategic growth',
+        icon: 'FaChartLine',
+        features: JSON.stringify(['Revenue optimization', 'Strategic growth', 'Engagement boost', 'Analytics support']),
+        benefits: JSON.stringify(['Increase earnings', 'Optimize CPM', 'Grow revenue', 'Scale income']),
+        category: 'revenue',
+        order: 4,
+        isActive: true,
+        isFeatured: false
+      });
+    }
+
+    const revenuePlans = [
+      { planName: 'Revenue Starter', quantity: '10K Views + 200 Subs', price: 2200, originalPrice: 4400, discount: 50, deliveryTime: '10-15 days', features: JSON.stringify(['10K High-Retention Views', '200 Active Subscribers', 'Engagement Boost', 'Revenue Optimization Tips']), isPopular: false, order: 1 },
+      { planName: 'Revenue Growth', quantity: '25K Views + 500 Subs', price: 4500, originalPrice: 9000, discount: 50, deliveryTime: '15-20 days', features: JSON.stringify(['25K Premium Views', '500 Engaged Subscribers', 'CPM Optimization', 'Revenue Strategy Guide']), isPopular: true, order: 2 },
+      { planName: 'Revenue Accelerator', quantity: '50K Views + 1000 Subs', price: 8000, originalPrice: 16000, discount: 50, deliveryTime: '20-30 days', features: JSON.stringify(['50K Premium Views', '1000 Active Subscribers', 'Advanced Analytics', 'Revenue Maximization']), isPopular: true, order: 3 }
+    ];
+
+    created = 0; updated = 0;
+    for (const planData of revenuePlans) {
+      const [plan, wasCreated] = await Pricing.findOrCreate({
+        where: { serviceId: revService.id, planName: planData.planName },
+        defaults: { ...planData, serviceId: revService.id, category: 'youtube-revenue' }
+      });
+      if (!wasCreated) { await plan.update(planData); updated++; } else { created++; }
+    }
+    results.revenue = { created, updated, total: created + updated };
+    totalCreated += created; totalUpdated += updated;
 
     res.status(200).json({
       status: 'success',
-      message: 'Pricing plans synced successfully',
+      message: 'All pricing plans synced successfully',
       data: {
-        service: viewService.name,
-        created,
-        updated,
-        total: created + updated
+        totalCreated,
+        totalUpdated,
+        totalPlans: totalCreated + totalUpdated,
+        breakdown: results
       }
     });
 
