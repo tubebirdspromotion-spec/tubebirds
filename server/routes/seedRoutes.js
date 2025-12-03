@@ -17,6 +17,25 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     
     const { sequelize } = await import('../config/db.js');
     
+    // Direct SQL to modify pricingId column to allow NULL
+    console.log('Making pricingId nullable...');
+    await sequelize.query(`
+      ALTER TABLE orders 
+      MODIFY COLUMN pricingId INT NULL
+    `);
+    
+    console.log('Adding planDetails column if not exists...');
+    await sequelize.query(`
+      ALTER TABLE orders 
+      ADD COLUMN IF NOT EXISTS planDetails JSON NULL
+    `).catch(err => {
+      if (err.message.includes('Duplicate column')) {
+        console.log('planDetails column already exists');
+      } else {
+        throw err;
+      }
+    });
+    
     // Sync database schema (alter tables without dropping)
     await sequelize.sync({ alter: true });
     
@@ -25,7 +44,7 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     res.status(200).json({
       status: 'success',
       message: 'Database schema migrated successfully',
-      info: 'Schema updated to match current models (allowNull fields updated)'
+      info: 'pricingId is now nullable, planDetails column added'
     });
     
   } catch (error) {
@@ -33,7 +52,8 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to run migrations',
-      error: error.message
+      error: error.message,
+      details: error.stack
     });
   }
 });
