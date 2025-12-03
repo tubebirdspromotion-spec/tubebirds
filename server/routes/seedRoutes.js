@@ -25,19 +25,19 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
     `);
     
     console.log('Adding planDetails column if not exists...');
-    await sequelize.query(`
-      ALTER TABLE orders 
-      ADD COLUMN IF NOT EXISTS planDetails JSON NULL
-    `).catch(err => {
-      if (err.message.includes('Duplicate column')) {
-        console.log('planDetails column already exists');
+    try {
+      await sequelize.query(`
+        ALTER TABLE orders 
+        ADD COLUMN planDetails JSON NULL
+      `);
+      console.log('✅ planDetails column added');
+    } catch (err) {
+      if (err.message.includes('Duplicate column') || err.message.includes('duplicate column')) {
+        console.log('✅ planDetails column already exists');
       } else {
         throw err;
       }
-    });
-    
-    // Sync database schema (alter tables without dropping)
-    await sequelize.sync({ alter: true });
+    }
     
     console.log('✅ Database schema updated successfully');
     
