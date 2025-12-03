@@ -8,6 +8,36 @@ import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
+// @desc    Run database migrations (Update schema without data loss)
+// @route   POST /api/seed/migrate
+// @access  Private/Admin
+router.post('/migrate', protect, authorize('admin'), async (req, res) => {
+  try {
+    console.log('🔄 Running database migrations...');
+    
+    const { sequelize } = await import('../config/db.js');
+    
+    // Sync database schema (alter tables without dropping)
+    await sequelize.sync({ alter: true });
+    
+    console.log('✅ Database schema updated successfully');
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Database schema migrated successfully',
+      info: 'Schema updated to match current models (allowNull fields updated)'
+    });
+    
+  } catch (error) {
+    console.error('Migration error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to run migrations',
+      error: error.message
+    });
+  }
+});
+
 // @desc    Sync ALL pricing plans (Views, Subscribers, Monetization, Revenue)
 // @route   POST /api/seed/sync-pricing
 // @access  Private/Admin
