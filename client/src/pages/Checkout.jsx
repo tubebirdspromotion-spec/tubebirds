@@ -50,14 +50,15 @@ const Checkout = () => {
     if (location.state?.plan) {
       console.log('📦 Checkout: Plan received from location.state:', location.state.plan)
       setPlan(location.state.plan)
-      // Calculate GST
-      const baseAmount = parseFloat(location.state.plan.price) / 1.18
-      const gstAmount = parseFloat(location.state.plan.price) - baseAmount
+      // Calculate GST: Base price + 18% GST = Total
+      const baseAmount = parseFloat(location.state.plan.price)
+      const gstAmount = baseAmount * 0.18 // 18% of base price
+      const totalAmount = baseAmount + gstAmount
       setGstDetails({
         baseAmount: baseAmount.toFixed(2),
         gstAmount: gstAmount.toFixed(2),
         gstRate: 18,
-        totalAmount: parseFloat(location.state.plan.price).toFixed(2)
+        totalAmount: totalAmount.toFixed(2)
       })
     } else {
       console.log('❌ Checkout: No plan in location.state, redirecting to pricing')
