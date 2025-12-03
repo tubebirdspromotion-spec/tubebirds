@@ -30,6 +30,12 @@ Payment.init(
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE'
     },
+    // Transaction IDs
+    transactionId: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      comment: 'Generic transaction ID'
+    },
     payuTransactionId: {
       type: DataTypes.STRING(255),
       allowNull: true,
@@ -38,43 +44,83 @@ Payment.init(
     razorpayOrderId: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      comment: 'Razorpay order ID (if used)'
+      unique: true,
+      comment: 'Razorpay order ID'
     },
     razorpayPaymentId: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      comment: 'Razorpay payment ID (if used)'
+      unique: true,
+      comment: 'Razorpay payment ID'
     },
+    razorpaySignature: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+      comment: 'Razorpay payment signature for verification'
+    },
+    // Amount details
     amount: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
+      allowNull: false,
+      comment: 'Total amount including GST'
+    },
+    baseAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'Base amount before GST'
+    },
+    gstAmount: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true,
+      comment: 'GST amount (18%)'
     },
     currency: {
       type: DataTypes.STRING(10),
       defaultValue: 'INR'
     },
+    // Status tracking
     status: {
-      type: DataTypes.ENUM('pending', 'success', 'failed', 'refunded'),
-      defaultValue: 'pending'
+      type: DataTypes.ENUM('pending', 'authorized', 'captured', 'success', 'failed', 'refunded'),
+      defaultValue: 'pending',
+      comment: 'Payment status'
     },
     paymentMethod: {
-      type: DataTypes.ENUM('payu', 'razorpay', 'stripe', 'manual', 'other'),
-      allowNull: false
+      type: DataTypes.ENUM('razorpay', 'payu', 'stripe', 'manual', 'other'),
+      defaultValue: 'razorpay'
     },
     paymentGateway: {
       type: DataTypes.STRING(50),
-      allowNull: true,
-      comment: 'Gateway used (e.g., PayU, Razorpay, Stripe)'
+      defaultValue: 'razorpay',
+      comment: 'Gateway used (e.g., Razorpay, PayU, Stripe)'
     },
+    // Payment mode (card, upi, netbanking, etc.)
+    paymentMode: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Mode of payment (card, upi, netbanking, wallet, etc.)'
+    },
+    // Response and metadata
     paymentResponse: {
       type: DataTypes.JSON,
       defaultValue: {},
       comment: 'Full response from payment gateway'
     },
+    metadata: {
+      type: DataTypes.JSON,
+      defaultValue: {},
+      comment: 'Additional metadata like invoice details'
+    },
+    // Failure tracking
     failureReason: {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    failureCode: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      comment: 'Error code from payment gateway'
+    },
+    // Refund details
     refundAmount: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true
@@ -85,6 +131,31 @@ Payment.init(
     },
     refundTransactionId: {
       type: DataTypes.STRING(255),
+      allowNull: true
+    },
+    refundStatus: {
+      type: DataTypes.ENUM('pending', 'processed', 'failed'),
+      allowNull: true
+    },
+    // Timestamps for tracking
+    authorizedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'When payment was authorized'
+    },
+    capturedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      comment: 'When payment was captured'
+    },
+    // Invoice details
+    invoiceNumber: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      unique: true
+    },
+    invoiceUrl: {
+      type: DataTypes.STRING(500),
       allowNull: true
     }
   },

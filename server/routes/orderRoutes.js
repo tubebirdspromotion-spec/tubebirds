@@ -4,6 +4,7 @@ import {
   getOrder,
   createOrder,
   updateOrder,
+  updateOrderStatus,
   updateOrderProgress,
   addOrderNote,
   deleteOrder
@@ -18,6 +19,7 @@ router.get('/', getOrders);
 router.get('/:id', getOrder);
 router.post('/', createOrder);
 router.put('/:id', authorize('admin'), updateOrder);
+router.put('/:id/status', authorize('admin'), updateOrderStatus);
 router.put('/:id/progress', authorize('admin'), updateOrderProgress);
 router.post('/:id/notes', addOrderNote);
 router.delete('/:id', authorize('admin'), deleteOrder);

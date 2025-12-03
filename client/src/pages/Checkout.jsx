@@ -1,31 +1,63 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
-import { FaYoutube, FaLock, FaCheckCircle, FaArrowLeft, FaCreditCard } from 'react-icons/fa'
+import { FaYoutube, FaLock, FaCheckCircle, FaArrowLeft, FaCreditCard, FaShieldAlt } from 'react-icons/fa'
 import toast from 'react-hot-toast'
 import api from '../services/api'
+
+// Load Razorpay script
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script')
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    script.onload = () => resolve(true)
+    script.onerror = () => resolve(false)
+    document.body.appendChild(script)
+  })
+}
 
 const Checkout = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const dispatch = useDispatch()
   const { isAuthenticated, user, token } = useSelector((state) => state.auth)
   
   const [plan, setPlan] = useState(null)
   const [formData, setFormData] = useState({
-    youtubeUrl: '',
+    videoUrl: '',
     channelName: '',
+    channelUrl: '',
     agreeTerms: false
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
+  const [scriptLoaded, setScriptLoaded] = useState(false)
+  const [gstDetails, setGstDetails] = useState(null)
+
+  useEffect(() => {
+    // Load Razorpay script
+    loadRazorpayScript().then((loaded) => {
+      setScriptLoaded(loaded)
+      if (!loaded) {
+        toast.error('Failed to load payment gateway. Please refresh the page.')
+      }
+    })
+  }, [])
 
   useEffect(() => {
     // Get plan from location state
     if (location.state?.plan) {
       setPlan(location.state.plan)
+      // Calculate GST
+      const baseAmount = parseFloat(location.state.plan.price) / 1.18
+      const gstAmount = parseFloat(location.state.plan.price) - baseAmount
+      setGstDetails({
+        baseAmount: baseAmount.toFixed(2),
+        gstAmount: gstAmount.toFixed(2),
+        gstRate: 18,
+        totalAmount: parseFloat(location.state.plan.price).toFixed(2)
+      })
     } else if (!plan) {
       toast.error('No plan selected')
       navigate('/pricing')
@@ -48,8 +80,13 @@ const Checkout = () => {
   }, [hasCheckedAuth, isAuthenticated, token, navigate, location])
 
   const validateYoutubeUrl = (url) => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/
-    return youtubeRegex.test(url)
+    const patterns = [
+      /^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]+/,
+      /^(https?:\/\/)?(www\.)?youtube\.com\/embed\/[\w-]+/,
+      /^(https?:\/\/)?(www\.)?youtube\.com\/shorts\/[\w-]+/,
+      /^(https?:\/\/)?youtu\.be\/[\w-]+/
+    ]
+    return patterns.some(pattern => pattern.test(url))
   }
 
   const handleInputChange = (e) => {
@@ -68,14 +105,10 @@ const Checkout = () => {
   const validateForm = () => {
     const errors = {}
     
-    if (!formData.youtubeUrl.trim()) {
-      errors.youtubeUrl = 'YouTube URL is required'
-    } else if (!validateYoutubeUrl(formData.youtubeUrl)) {
-      errors.youtubeUrl = 'Please enter a valid YouTube URL'
-    }
-    
-    if (!formData.channelName.trim()) {
-      errors.channelName = 'Channel name is required'
+    if (!formData.videoUrl.trim()) {
+      errors.videoUrl = 'YouTube video URL is required'
+    } else if (!validateYoutubeUrl(formData.videoUrl)) {
+      errors.videoUrl = 'Please enter a valid YouTube video URL'
     }
     
     if (!formData.agreeTerms) {
@@ -86,6 +119,64 @@ const Checkout = () => {
     return Object.keys(errors).length === 0
   }
 
+  const handlePayment = async (orderData) => {
+    if (!scriptLoaded) {
+      toast.error('Payment gateway not loaded. Please refresh the page.')
+      return
+    }
+
+    const options = {
+      key: orderData.razorpayKeyId,
+      amount: Math.round(orderData.amount * 100), // Amount in paise
+      currency: orderData.currency,
+      name: 'TubeBirds',
+      description: `${plan.name} - ${plan.quantity}`,
+      order_id: orderData.razorpayOrderId,
+      prefill: {
+        name: orderData.customerDetails.name,
+        email: orderData.customerDetails.email,
+        contact: orderData.customerDetails.phone || ''
+      },
+      theme: {
+        color: '#DC2626' // Red-600
+      },
+      modal: {
+        ondismiss: function() {
+          setIsSubmitting(false)
+          toast.error('Payment cancelled')
+        }
+      },
+      handler: async function (response) {
+        try {
+          // Verify payment on server
+          const verifyResponse = await api.post('/payment/verify', {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            orderId: orderData.orderId
+          })
+
+          toast.success('Payment successful! 🎉')
+          
+          // Redirect to order details/dashboard
+          navigate('/dashboard/client/orders', { 
+            state: { 
+              paymentSuccess: true,
+              orderId: orderData.orderId
+            } 
+          })
+        } catch (error) {
+          console.error('Payment verification error:', error)
+          toast.error(error.response?.data?.message || 'Payment verification failed')
+          setIsSubmitting(false)
+        }
+      }
+    }
+
+    const razorpay = new window.Razorpay(options)
+    razorpay.open()
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -94,67 +185,35 @@ const Checkout = () => {
       return
     }
     
+    if (!scriptLoaded) {
+      toast.error('Payment gateway not loaded. Please refresh the page.')
+      return
+    }
+
     setIsSubmitting(true)
     
     try {
-      // Create order
-      const orderData = {
-        serviceId: plan.serviceId || 1, // Default service ID
-        pricingId: plan.pricingId || plan.id,
-        planName: plan.name,
-        quantity: plan.quantity,
-        amount: plan.price,
-        baseAmount: plan.price / 1.18, // Calculate base amount (before GST)
-        gstRate: 18,
-        gstAmount: plan.price - (plan.price / 1.18),
-        youtubeUrl: formData.youtubeUrl,
-        channelName: formData.channelName,
-        requirements: {
-          youtubeUrl: formData.youtubeUrl,
-          channelName: formData.channelName,
-          plan: plan.name,
-          quantity: plan.quantity
-        },
-        status: 'pending'
-      }
-
-      const response = await api.post('/orders', orderData)
-      const order = response.data.data.order
-
-      // Simulate test payment (no actual payment gateway)
-      toast.loading('Processing test payment...')
-      
-      // Simulate payment delay
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Create test payment record
-      const paymentData = {
-        orderId: order.id,
-        amount: plan.price,
-        gateway: 'test',
-        transactionId: `TEST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'success'
-      }
-      
-      await api.post('/payment/verify', paymentData)
-      
-      toast.dismiss()
-      toast.success('Test payment successful! 🎉')
-      
-      // Redirect to order details
-      navigate(`/dashboard/orders/${order.id}`, { 
-        state: { paymentSuccess: true } 
+      // Create Razorpay order on server
+      const response = await api.post('/payment/create-order', {
+        pricingId: plan.id,
+        videoUrl: formData.videoUrl,
+        channelName: formData.channelName || '',
+        channelUrl: formData.channelUrl || ''
       })
+
+      const orderData = response.data.data
+
+      // Open Razorpay checkout
+      await handlePayment(orderData)
       
     } catch (error) {
       console.error('Checkout error:', error)
-      toast.error(error.response?.data?.message || 'Failed to process order')
-    } finally {
+      toast.error(error.response?.data?.message || 'Failed to initiate payment')
       setIsSubmitting(false)
     }
   }
 
-  if (!plan) {
+  if (!plan || !gstDetails) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-600"></div>
@@ -173,13 +232,13 @@ const Checkout = () => {
         >
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <FaArrowLeft />
             <span>Back to Pricing</span>
           </button>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600 mt-2">Complete your order details</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Secure Checkout</h1>
+          <p className="text-gray-600 mt-2">Complete your order to get started</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -187,7 +246,7 @@ const Checkout = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6"
+            className="md:col-span-2 bg-white rounded-2xl shadow-lg p-6 md:p-8"
           >
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <FaYoutube className="text-red-600" />
@@ -198,30 +257,31 @@ const Checkout = () => {
               {/* YouTube URL */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  YouTube Video/Channel URL *
+                  YouTube Video URL *
                 </label>
                 <input
                   type="text"
-                  name="youtubeUrl"
-                  value={formData.youtubeUrl}
+                  name="videoUrl"
+                  value={formData.videoUrl}
                   onChange={handleInputChange}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-                    validationErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                  placeholder="https://youtube.com/watch?v=xxxxx or https://youtu.be/xxxxx"
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all ${
+                    validationErrors.videoUrl ? 'border-red-500' : 'border-gray-300'
                   }`}
+                  disabled={isSubmitting}
                 />
-                {validationErrors.youtubeUrl && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.youtubeUrl}</p>
+                {validationErrors.videoUrl && (
+                  <p className="text-red-500 text-sm mt-1">{validationErrors.videoUrl}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Paste the full URL of your YouTube video or channel
+                  📹 Paste the full URL of your YouTube video (required before payment)
                 </p>
               </div>
 
-              {/* Channel Name */}
+              {/* Channel Name (Optional) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Channel Name *
+                  Channel Name <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
@@ -229,42 +289,58 @@ const Checkout = () => {
                   value={formData.channelName}
                   onChange={handleInputChange}
                   placeholder="Your YouTube Channel Name"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent ${
-                    validationErrors.channelName ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  disabled={isSubmitting}
                 />
-                {validationErrors.channelName && (
-                  <p className="text-red-500 text-sm mt-1">{validationErrors.channelName}</p>
-                )}
+              </div>
+
+              {/* Channel URL (Optional) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Channel URL <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  name="channelUrl"
+                  value={formData.channelUrl}
+                  onChange={handleInputChange}
+                  placeholder="https://youtube.com/@yourchannel"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                  disabled={isSubmitting}
+                />
               </div>
 
               {/* User Info (Read-only) */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-700 mb-2">Customer Information</h3>
+              <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-blue-100">
+                <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <FaCheckCircle className="text-blue-600" />
+                  Billing Information
+                </h3>
                 <div className="space-y-2 text-sm">
-                  <p><span className="font-medium">Name:</span> {user?.name}</p>
-                  <p><span className="font-medium">Email:</span> {user?.email}</p>
-                  {user?.phone && <p><span className="font-medium">Phone:</span> {user.phone}</p>}
+                  <p><span className="font-medium text-gray-600">Name:</span> <span className="text-gray-900">{user?.name}</span></p>
+                  <p><span className="font-medium text-gray-600">Email:</span> <span className="text-gray-900">{user?.email}</span></p>
+                  {user?.phone && <p><span className="font-medium text-gray-600">Phone:</span> <span className="text-gray-900">{user.phone}</span></p>}
                 </div>
               </div>
 
               {/* Terms & Conditions */}
               <div>
-                <label className="flex items-start gap-3 cursor-pointer">
+                <label className="flex items-start gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     name="agreeTerms"
                     checked={formData.agreeTerms}
                     onChange={handleInputChange}
                     className="mt-1 w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                    disabled={isSubmitting}
                   />
                   <span className={`text-sm ${validationErrors.agreeTerms ? 'text-red-500' : 'text-gray-600'}`}>
                     I agree to the{' '}
-                    <a href="/terms-conditions" target="_blank" className="text-red-600 hover:underline">
+                    <a href="/terms-conditions" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline font-medium">
                       Terms & Conditions
                     </a>
                     {' '}and{' '}
-                    <a href="/refund-policy" target="_blank" className="text-red-600 hover:underline">
+                    <a href="/refund-policy" target="_blank" rel="noopener noreferrer" className="text-red-600 hover:underline font-medium">
                       Refund Policy
                     </a>
                   </span>
@@ -277,16 +353,28 @@ const Checkout = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-lg font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || !scriptLoaded}
+                className="w-full bg-gradient-to-r from-red-600 to-orange-600 text-white py-4 rounded-lg font-bold text-lg hover:from-red-700 hover:to-orange-700 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
               >
                 <FaCreditCard />
-                {isSubmitting ? 'Processing...' : 'Proceed to Test Payment'}
+                {isSubmitting ? 'Processing...' : !scriptLoaded ? 'Loading...' : 'Proceed to Secure Payment'}
               </button>
 
+              {/* Security Badge */}
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                 <FaLock className="text-green-600" />
-                <span>This is a TEST payment - No actual charges</span>
+                <span>256-bit SSL Encrypted Payment via Razorpay</span>
+              </div>
+              
+              {/* Payment Methods */}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="text-xs text-gray-600 text-center mb-2">We accept</p>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <span className="text-xs bg-white px-3 py-1 rounded-full border">Cards</span>
+                  <span className="text-xs bg-white px-3 py-1 rounded-full border">UPI</span>
+                  <span className="text-xs bg-white px-3 py-1 rounded-full border">Net Banking</span>
+                  <span className="text-xs bg-white px-3 py-1 rounded-full border">Wallets</span>
+                </div>
               </div>
             </form>
           </motion.div>
@@ -301,10 +389,10 @@ const Checkout = () => {
             
             <div className="space-y-4">
               {/* Plan Details */}
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 p-4 rounded-lg">
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 p-4 rounded-lg border border-red-100">
                 <div className="flex items-center gap-2 mb-2">
                   {plan.icon}
-                  <h3 className="font-bold text-lg">{plan.name}</h3>
+                  <h3 className="font-bold text-lg text-gray-900">{plan.name}</h3>
                 </div>
                 <p className="text-2xl font-bold text-red-600">{plan.quantity}</p>
               </div>
@@ -313,23 +401,23 @@ const Checkout = () => {
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Base Amount:</span>
-                  <span className="font-semibold">₹{(plan.price / 1.18).toFixed(2)}</span>
+                  <span className="font-semibold">₹{gstDetails.baseAmount}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">GST (18%):</span>
-                  <span className="font-semibold">₹{(plan.price - (plan.price / 1.18)).toFixed(2)}</span>
+                  <span className="text-gray-600">GST ({gstDetails.gstRate}%):</span>
+                  <span className="font-semibold">₹{gstDetails.gstAmount}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-3">
-                  <span>Total:</span>
-                  <span className="text-red-600">₹{plan.price.toLocaleString()}</span>
+                  <span>Total Amount:</span>
+                  <span className="text-red-600">₹{parseFloat(gstDetails.totalAmount).toLocaleString()}</span>
                 </div>
               </div>
 
               {/* Features Preview */}
               <div className="border-t pt-4">
-                <h4 className="font-semibold mb-2 text-sm">Included:</h4>
+                <h4 className="font-semibold mb-3 text-sm text-gray-700">What's Included:</h4>
                 <ul className="space-y-2">
-                  {plan.features.slice(0, 4).map((feature, idx) => (
+                  {plan.features.slice(0, 5).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-xs text-gray-600">
                       <FaCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
                       <span>{feature}</span>
@@ -338,11 +426,19 @@ const Checkout = () => {
                 </ul>
               </div>
 
-              {/* Trust Badge */}
-              <div className="bg-green-50 p-3 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700 text-sm font-semibold">
-                  <FaCheckCircle />
-                  <span>100% Safe & Secure</span>
+              {/* Trust Badges */}
+              <div className="space-y-2 border-t pt-4">
+                <div className="bg-green-50 p-3 rounded-lg border border-green-100">
+                  <div className="flex items-center gap-2 text-green-700 text-sm font-semibold">
+                    <FaShieldAlt />
+                    <span>100% Safe & Secure</span>
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                  <div className="flex items-center gap-2 text-blue-700 text-sm font-semibold">
+                    <FaCheckCircle />
+                    <span>Instant Order Confirmation</span>
+                  </div>
                 </div>
               </div>
             </div>

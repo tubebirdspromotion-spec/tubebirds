@@ -211,7 +211,10 @@ export const updateOrder = async (req, res, next) => {
       });
     }
 
-    await order.update(req.body);
+    // Don't allow changing certain fields directly
+    const { amount, baseAmount, gstAmount, paymentStatus, orderNumber, ...updateData } = req.body;
+
+    await order.update(updateData);
 
     // Reload with associations
     await order.reload({
@@ -225,6 +228,70 @@ export const updateOrder = async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
+      message: 'Order updated successfully',
+      data: { order }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update order status (Admin only)
+// @route   PUT /api/orders/:id/status
+// @access  Private/Admin
+export const updateOrderStatus = async (req, res, next) => {
+  try {
+    const { status, adminNotes } = req.body;
+
+    // Validate status
+    const validStatuses = ['pending', 'processing', 'in-progress', 'completed', 'cancelled', 'refunded'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        status: 'error',
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
+
+    const order = await Order.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'customer' },
+        { model: Service, as: 'service' },
+        { model: Pricing, as: 'pricing' }
+      ]
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Order not found'
+      });
+    }
+
+    const updates = { status };
+
+    // Add timestamps based on status
+    if (status === 'in-progress' && !order.startDate) {
+      updates.startDate = new Date();
+    }
+
+    if (status === 'completed' && !order.completionDate) {
+      updates.completionDate = new Date();
+      updates.progress = 100;
+      updates.completedQuantity = order.targetQuantity;
+    }
+
+    if (adminNotes) {
+      updates.adminNotes = adminNotes;
+    }
+
+    await order.update(updates);
+
+    // Reload to get updated data
+    await order.reload();
+
+    res.status(200).json({
+      status: 'success',
+      message: `Order status updated to ${status}`,
       data: { order }
     });
   } catch (error) {
