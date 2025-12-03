@@ -55,9 +55,9 @@ const connectDB = async () => {
       await sequelize.sync({ alter: true });
       console.log('✅ Database Synchronized (Development Mode)');
     } else {
-      // In production, don't auto-alter tables
-      await sequelize.sync({ alter: false });
-      console.log('✅ Database Synchronized (Production Mode)');
+      // In production, skip automatic sync to avoid schema conflicts
+      // Use migration endpoints instead: /api/seed/migrate
+      console.log('✅ Database Connected (Production Mode - Manual Migrations Only)');
     }
     
   } catch (error) {
