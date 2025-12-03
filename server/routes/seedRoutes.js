@@ -11,6 +11,9 @@ const router = express.Router();
 // @desc    Run database migrations (Update schema without data loss)
 // @route   POST /api/seed/migrate
 // @access  Private/Admin
+// @desc    Run database migrations (Update schema)
+// @route   POST /api/seed/migrate
+// @access  Private/Admin
 router.post('/migrate', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🔄 Running database migrations...');
