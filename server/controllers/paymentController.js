@@ -80,11 +80,15 @@ export const createRazorpayOrder = async (req, res, next) => {
     // Extract YouTube video ID
     const videoId = razorpayService.extractYouTubeVideoId(videoUrl);
 
+    // Generate order number
+    const orderNumber = await Order.generateOrderNumber();
+
     // Create order in database
     const order = await Order.create({
+      orderNumber,
       userId: req.user.id,
-      pricingId,
-      serviceId: pricing.serviceId,
+      pricingId: pricingId || null,
+      serviceId: serviceId || pricing.serviceId || 1,
       amount: gstCalculation.totalAmount,
       baseAmount: gstCalculation.baseAmount,
       gstAmount: gstCalculation.gstAmount,
@@ -104,7 +108,9 @@ export const createRazorpayOrder = async (req, res, next) => {
         videoId: videoId
       },
       targetQuantity,
-      estimatedCompletionDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) // 15 days
+      estimatedCompletionDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
+      // Store plan details if no pricingId
+      planDetails: !pricingId ? planDetails : null
     });
 
     // Create Razorpay order

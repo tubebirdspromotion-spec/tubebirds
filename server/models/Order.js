@@ -44,13 +44,14 @@ Order.init(
     },
     pricingId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       references: {
         model: 'pricings',
         key: 'id'
       },
       onDelete: 'RESTRICT',
-      onUpdate: 'CASCADE'
+      onUpdate: 'CASCADE',
+      comment: 'Pricing plan ID (nullable for custom plans)'
     },
     editorId: {
       type: DataTypes.INTEGER,
