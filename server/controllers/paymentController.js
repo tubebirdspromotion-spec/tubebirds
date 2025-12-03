@@ -42,7 +42,7 @@ export const createRazorpayOrder = async (req, res, next) => {
     }
 
     let pricing;
-    let serviceId = 1; // Default YouTube Views service
+    let serviceId;
     
     // Try to get pricing from database first
     if (pricingId) {
@@ -52,15 +52,30 @@ export const createRazorpayOrder = async (req, res, next) => {
           as: 'service'
         }]
       });
+      serviceId = pricing?.serviceId;
     }
 
     // If not found and planDetails provided, use planDetails
     if (!pricing && planDetails) {
+      // Map category to serviceId
+      const categoryServiceMap = {
+        'views': 1,
+        'subscribers': 2,
+        'monetization': 3,
+        'revenue': 4
+      };
+      
+      serviceId = categoryServiceMap[planDetails.category] || 1;
+      
+      // Find or use default service
+      const service = await Service.findByPk(serviceId);
+      
       pricing = {
         price: parseFloat(planDetails.price),
         quantity: planDetails.quantity || planDetails.views || '0',
         planName: planDetails.name,
-        serviceId: serviceId
+        serviceId: serviceId,
+        service: service || { id: serviceId, name: 'YouTube Service' }
       };
     }
 
@@ -88,7 +103,7 @@ export const createRazorpayOrder = async (req, res, next) => {
       orderNumber,
       userId: req.user.id,
       pricingId: pricingId || null,
-      serviceId: serviceId || pricing.serviceId || 1,
+      serviceId: serviceId,
       amount: gstCalculation.totalAmount,
       baseAmount: gstCalculation.baseAmount,
       gstAmount: gstCalculation.gstAmount,
@@ -121,8 +136,8 @@ export const createRazorpayOrder = async (req, res, next) => {
       notes: {
         orderId: order.id.toString(),
         userId: req.user.id.toString(),
-        serviceId: pricing.serviceId.toString(),
-        pricingId: pricingId.toString()
+        serviceId: serviceId.toString(),
+        pricingId: pricingId ? pricingId.toString() : 'frontend-plan'
       }
     });
 
