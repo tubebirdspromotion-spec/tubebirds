@@ -207,12 +207,12 @@ export const getClientDashboard = async (req, res, next) => {
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['id', 'name', 'planName', 'quantity', 'price', 'category', 'description']
+          attributes: ['id', 'planName', 'quantity', 'price', 'category', 'description']
         },
         {
           model: Service,
           as: 'service',
-          attributes: ['id', 'name', 'slug', 'icon']
+          attributes: ['id', 'title', 'slug', 'icon']
         },
         {
           model: User,
@@ -229,8 +229,8 @@ export const getClientDashboard = async (req, res, next) => {
     const formattedOrders = recentOrders.map(order => ({
       id: order.id,
       orderNumber: order.orderNumber,
-      serviceName: order.service?.name || 'Service',
-      planName: order.pricing?.planName || order.pricing?.name || 'N/A',
+      serviceName: order.service?.title || 'Service',
+      planName: order.pricing?.planName || 'N/A',
       status: order.status,
       paymentStatus: order.paymentStatus,
       amount: order.amount,
@@ -301,12 +301,12 @@ export const getClientStats = async (req, res, next) => {
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['id', 'planName', 'category', 'name', 'quantity']
+          attributes: ['id', 'planName', 'category', 'quantity']
         },
         {
           model: Service,
           as: 'service',
-          attributes: ['id', 'name', 'slug']
+          attributes: ['id', 'title', 'slug']
         }
       ],
       order: [['createdAt', 'DESC']],
@@ -323,12 +323,12 @@ export const getClientStats = async (req, res, next) => {
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['id', 'planName', 'name']
+          attributes: ['id', 'planName']
         },
         {
           model: Service,
           as: 'service',
-          attributes: ['id', 'name']
+          attributes: ['id', 'title']
         }
       ],
       order: [['createdAt', 'DESC']]

@@ -16,7 +16,7 @@ const Orders = () => {
   const fetchOrders = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/orders/my-orders')
+      const response = await api.get('/orders')
       setOrders(response.data.data.orders)
     } catch (error) {
       toast.error('Failed to fetch orders')

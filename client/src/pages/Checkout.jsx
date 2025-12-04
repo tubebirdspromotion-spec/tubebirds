@@ -151,8 +151,8 @@ const Checkout = () => {
 
           toast.success('Payment successful! 🎉')
           
-          // Redirect to order details/dashboard
-          navigate('/dashboard/client/orders', { 
+          // Redirect to order details page
+          navigate(`/dashboard/orders/${orderData.orderId}`, { 
             state: { 
               paymentSuccess: true,
               orderId: orderData.orderId
