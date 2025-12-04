@@ -102,7 +102,7 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6 print:hidden">
         <button
@@ -149,12 +149,28 @@ const OrderDetail = () => {
       <div className="grid md:grid-cols-3 gap-6">
         {/* Main Order Details */}
         <div className="md:col-span-2 space-y-6">
-          {/* Order Status */}
+          {/* Order & Payment Status */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4">Order Status</h2>
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-semibold ${getStatusColor(order.status)}`}>
-              {getStatusIcon(order.status)}
-              <span className="capitalize">{order.status?.replace('_', ' ')}</span>
+            <h2 className="text-xl font-bold mb-4">Order & Payment Status</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase">Order Status</label>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-semibold mt-2 ${getStatusColor(order.status)}`}>
+                  {getStatusIcon(order.status)}
+                  <span className="capitalize">{order.status?.replace(/_|-/g, ' ')}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase">Payment Status</label>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border font-semibold mt-2 ${
+                  order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800 border-green-300' :
+                  order.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                  order.paymentStatus === 'failed' ? 'bg-red-100 text-red-800 border-red-300' :
+                  'bg-gray-100 text-gray-800 border-gray-300'
+                }`}>
+                  <span className="capitalize">{order.paymentStatus}</span>
+                </div>
+              </div>
             </div>
             
             {order.estimatedCompletionDate && (
@@ -165,55 +181,119 @@ const OrderDetail = () => {
             )}
           </div>
 
-          {/* Service Details */}
+          {/* Plan Details */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <FaYoutube className="text-red-600" />
-              Service Details
-            </h2>
-            <div className="space-y-3">
+            <h2 className="text-xl font-bold mb-4">Plan Details</h2>
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-semibold text-gray-600">Plan Name</label>
-                <p className="text-lg font-medium">{order.planName || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.planName || order.pricing?.name || 'N/A'}</p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">Quantity</label>
-                <p className="text-lg font-medium">{order.quantity || 'N/A'}</p>
+                <label className="text-sm font-semibold text-gray-600">Service</label>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.service?.name || 'N/A'}</p>
               </div>
-              {order.requirements?.youtubeUrl && (
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">YouTube URL</label>
-                  <a 
-                    href={order.requirements.youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline break-all block"
-                  >
-                    {order.requirements.youtubeUrl}
-                  </a>
+              <div>
+                <label className="text-sm font-semibold text-gray-600">Initial Target</label>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.targetQuantity || 0}</p>
+              </div>
+              <div>
+                <label className="text-sm font-semibold text-gray-600">Category</label>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.category || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Channel Details */}
+          {order.channelDetails && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <FaYoutube className="text-red-600" />
+                Channel Details
+              </h2>
+              <div className="space-y-3">
+                {order.channelDetails.channelName && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Channel Name</label>
+                    <p className="text-gray-900 mt-1">{order.channelDetails.channelName}</p>
+                  </div>
+                )}
+                {order.channelDetails.channelUrl && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Channel URL</label>
+                    <a 
+                      href={order.channelDetails.channelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {order.channelDetails.channelUrl}
+                    </a>
+                  </div>
+                )}
+                {order.channelDetails.videoUrl && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Video URL</label>
+                    <a 
+                      href={order.channelDetails.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {order.channelDetails.videoUrl}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Progress Tracking */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4">Progress Tracking</h2>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm font-semibold text-gray-600">Overall Progress</label>
+                  <span className="text-lg font-bold text-primary-600">{order.progress || 0}%</span>
                 </div>
-              )}
-              {order.requirements?.channelName && (
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${order.progress || 0}%` }}
+                  ></div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-semibold text-gray-600">Channel Name</label>
-                  <p className="text-lg font-medium">{order.requirements.channelName}</p>
+                  <label className="text-sm font-semibold text-gray-600">Completed Quantity</label>
+                  <p className="text-2xl font-bold text-green-600 mt-1">{order.completedQuantity || 0}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600">Target Quantity</label>
+                  <p className="text-2xl font-bold text-blue-600 mt-1">{order.targetQuantity || 0}</p>
+                </div>
+              </div>
+
+              {order.completedQuantity !== undefined && order.targetQuantity && (
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
+                  Progress: {order.completedQuantity} out of {order.targetQuantity} items delivered
                 </div>
               )}
             </div>
           </div>
 
-          {/* Additional Requirements */}
-          {order.requirements && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4">Additional Information</h2>
-              <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
-                {JSON.stringify(order.requirements, null, 2)}
-              </pre>
+          {/* Admin Notes */}
+          {order.adminNotes && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+              <h2 className="text-xl font-bold mb-2 text-amber-900">Admin Notes</h2>
+              <p className="text-amber-800">{order.adminNotes}</p>
             </div>
           )}
         </div>
 
-        {/* Payment Receipt */}
+        {/* Payment Receipt Sidebar */}
         <div className="bg-white rounded-lg shadow-md p-6 h-fit sticky top-6">
           <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
             <FaReceipt className="text-green-600" />
@@ -224,13 +304,13 @@ const OrderDetail = () => {
             {/* Order Info */}
             <div className="pb-4 border-b">
               <p className="text-xs text-gray-500 mb-1">Order Number</p>
-              <p className="font-mono font-semibold">{order.orderNumber}</p>
+              <p className="font-mono font-semibold text-sm">{order.orderNumber}</p>
             </div>
 
             {/* Date */}
             <div className="pb-4 border-b">
               <p className="text-xs text-gray-500 mb-1">Order Date</p>
-              <p className="font-semibold">{new Date(order.createdAt).toLocaleString()}</p>
+              <p className="font-semibold text-sm">{new Date(order.createdAt).toLocaleDateString('en-IN')}</p>
             </div>
 
             {/* Price Breakdown */}
@@ -238,42 +318,63 @@ const OrderDetail = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Base Amount</span>
                 <span className="font-semibold">
-                  ₹{order.baseAmount ? parseFloat(order.baseAmount).toFixed(2) : (order.amount / 1.18).toFixed(2)}
+                  ₹{order.baseAmount ? parseFloat(order.baseAmount).toLocaleString('en-IN') : (parseFloat(order.amount) / 1.18).toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">GST ({order.gstRate || 18}%)</span>
                 <span className="font-semibold">
-                  ₹{order.gstAmount ? parseFloat(order.gstAmount).toFixed(2) : (order.amount - (order.amount / 1.18)).toFixed(2)}
+                  ₹{order.gstAmount ? parseFloat(order.gstAmount).toLocaleString('en-IN') : (parseFloat(order.amount) - (parseFloat(order.amount) / 1.18)).toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-lg font-bold pt-3 border-t">
                 <span>Total Paid</span>
-                <span className="text-green-600">₹{parseFloat(order.amount).toFixed(2)}</span>
+                <span className="text-green-600">₹{parseFloat(order.amount).toLocaleString('en-IN')}</span>
               </div>
             </div>
 
             {/* Payment Method */}
             <div className="pt-4 border-t">
               <p className="text-xs text-gray-500 mb-1">Payment Method</p>
-              <p className="font-semibold">Test Payment (Demo)</p>
+              <p className="font-semibold capitalize text-sm">{order.paymentMethod || 'Razorpay'}</p>
             </div>
-
-            {/* Transaction ID */}
-            {order.Payment && (
-              <div className="pt-4 border-t">
-                <p className="text-xs text-gray-500 mb-1">Transaction ID</p>
-                <p className="font-mono text-xs break-all">{order.Payment.transactionId}</p>
-              </div>
-            )}
 
             {/* Status Badge */}
             <div className="pt-4 border-t">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                <FaCheckCircle className="text-green-600 text-2xl mx-auto mb-2" />
-                <p className="text-sm font-semibold text-green-800">Payment Confirmed</p>
-              </div>
+              {order.paymentStatus === 'paid' ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                  <FaCheckCircle className="text-green-600 text-2xl mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-green-800">Payment Confirmed</p>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                  <FaClock className="text-yellow-600 text-2xl mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-yellow-800">Pending Payment</p>
+                </div>
+              )}
             </div>
+
+            {/* Timeline */}
+            {(order.createdAt || order.startDate || order.completionDate) && (
+              <div className="pt-4 border-t space-y-2">
+                <p className="text-xs font-semibold text-gray-600 uppercase">Timeline</p>
+                {order.createdAt && (
+                  <div className="text-xs text-gray-600">
+                    <span className="font-semibold">Created:</span> {new Date(order.createdAt).toLocaleDateString('en-IN')}
+                  </div>
+                )}
+                {order.startDate && (
+                  <div className="text-xs text-gray-600">
+                    <span className="font-semibold">Started:</span> {new Date(order.startDate).toLocaleDateString('en-IN')}
+                  </div>
+                )}
+                {order.completionDate && (
+                  <div className="text-xs text-gray-600">
+                    <span className="font-semibold">Completed:</span> {new Date(order.completionDate).toLocaleDateString('en-IN')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

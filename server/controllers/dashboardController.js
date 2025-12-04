@@ -178,41 +178,46 @@ export const getClientDashboard = async (req, res, next) => {
 
     // Total orders
     const totalOrders = await Order.count({ 
-      where: { customerId: userId } 
+      where: { userId: userId } 
     });
 
     // Pending orders
     const pendingOrders = await Order.count({
-      where: { customerId: userId, status: 'pending' }
+      where: { userId: userId, status: 'pending' }
     });
 
     // Completed orders
     const completedOrders = await Order.count({
-      where: { customerId: userId, status: 'completed' }
+      where: { userId: userId, status: 'completed' }
     });
 
     // Total spent
     const totalSpentData = await Order.findOne({
-      where: { customerId: userId, paymentStatus: 'paid' },
+      where: { userId: userId, paymentStatus: 'paid' },
       attributes: [
         [fn('SUM', col('amount')), 'total']
       ],
       raw: true
     });
 
-    // Recent orders
+    // Recent orders with full details
     const recentOrders = await Order.findAll({
-      where: { customerId: userId },
+      where: { userId: userId },
       include: [
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['name', 'quantity']
+          attributes: ['id', 'name', 'planName', 'quantity', 'price', 'category', 'description']
         },
         {
           model: Service,
           as: 'service',
-          attributes: ['name']
+          attributes: ['id', 'name', 'slug', 'icon']
+        },
+        {
+          model: User,
+          as: 'customer',
+          attributes: ['id', 'name', 'email', 'phone']
         }
       ],
       order: [['createdAt', 'DESC']],
@@ -223,10 +228,21 @@ export const getClientDashboard = async (req, res, next) => {
     // Format recent orders for frontend
     const formattedOrders = recentOrders.map(order => ({
       id: order.id,
+      orderNumber: order.orderNumber,
       serviceName: order.service?.name || 'Service',
+      planName: order.pricing?.planName || order.pricing?.name || 'N/A',
       status: order.status,
+      paymentStatus: order.paymentStatus,
       amount: order.amount,
-      createdAt: order.createdAt
+      baseAmount: order.baseAmount,
+      gstAmount: order.gstAmount,
+      progress: order.progress,
+      targetQuantity: order.targetQuantity,
+      completedQuantity: order.completedQuantity,
+      createdAt: order.createdAt,
+      startDate: order.startDate,
+      completionDate: order.completionDate,
+      estimatedCompletionDate: order.estimatedCompletionDate
     }));
 
     res.status(200).json({
@@ -255,12 +271,12 @@ export const getClientStats = async (req, res, next) => {
 
     // Total orders
     const totalOrders = await Order.count({ 
-      where: { customerId: userId } 
+      where: { userId: userId } 
     });
 
     // Orders by status
     const ordersByStatus = await Order.findAll({
-      where: { customerId: userId },
+      where: { userId: userId },
       attributes: [
         'status',
         [fn('COUNT', col('id')), 'count']
@@ -271,21 +287,26 @@ export const getClientStats = async (req, res, next) => {
 
     // Total spent
     const totalSpentData = await Order.findOne({
-      where: { customerId: userId, paymentStatus: 'paid' },
+      where: { userId: userId, paymentStatus: 'paid' },
       attributes: [
         [fn('SUM', col('amount')), 'total']
       ],
       raw: true
     });
 
-    // Recent orders
+    // Recent orders with details
     const recentOrders = await Order.findAll({
-      where: { customerId: userId },
+      where: { userId: userId },
       include: [
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['planName', 'category']
+          attributes: ['id', 'planName', 'category', 'name', 'quantity']
+        },
+        {
+          model: Service,
+          as: 'service',
+          attributes: ['id', 'name', 'slug']
         }
       ],
       order: [['createdAt', 'DESC']],
@@ -295,14 +316,19 @@ export const getClientStats = async (req, res, next) => {
     // Active orders (in-progress)
     const activeOrders = await Order.findAll({
       where: {
-        customerId: userId,
+        userId: userId,
         status: { [Op.in]: ['processing', 'in-progress'] }
       },
       include: [
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['planName']
+          attributes: ['id', 'planName', 'name']
+        },
+        {
+          model: Service,
+          as: 'service',
+          attributes: ['id', 'name']
         }
       ],
       order: [['createdAt', 'DESC']]

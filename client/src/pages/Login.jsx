@@ -82,22 +82,9 @@ const Login = () => {
             className="hidden lg:flex flex-col justify-center text-white"
           >
             <div className="bg-gradient-to-br from-red-600 via-red-700 to-orange-600 rounded-3xl p-12 shadow-2xl">
-              {/* TubeBirds Logo */}
+              {/* Logo */}
               <Link to="/" className="flex items-center gap-3 mb-8 group">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6, type: "spring" }}
-                  className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-shadow"
-                >
-                  <FaYoutube className="text-white text-3xl" />
-                </motion.div>
-                <div>
-                  <div className="text-3xl font-extrabold tracking-tight">
-                    <span className="text-white">Tube</span>
-                    <span className="text-orange-300">Birds</span>
-                  </div>
-                  <div className="text-sm text-white/80 font-semibold tracking-wide">Grow With Confidence</div>
-                </div>
+                <img src="/logo.png" alt="TubeBirds" className="h-16 sm:h-20 w-auto object-contain" />
               </Link>
 
               <h1 className="text-4xl font-bold mb-4">Welcome Back!</h1>
@@ -132,20 +119,7 @@ const Login = () => {
             <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
               {/* Mobile Logo */}
               <Link to="/" className="flex lg:hidden items-center justify-center gap-3 mb-8 group">
-                <motion.div
-                  whileHover={{ rotate: 360, scale: 1.1 }}
-                  transition={{ duration: 0.6, type: "spring" }}
-                  className="w-14 h-14 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-shadow"
-                >
-                  <FaYoutube className="text-white text-2xl" />
-                </motion.div>
-                <div>
-                  <div className="text-2xl font-extrabold tracking-tight">
-                    <span className="text-gray-900">Tube</span>
-                    <span className="text-red-600">Birds</span>
-                  </div>
-                  <div className="text-xs text-gray-500 font-semibold -mt-1 tracking-wide">Grow With Confidence</div>
-                </div>
+                <img src="/logo.png" alt="TubeBirds" className="h-14 w-auto object-contain" />
               </Link>
 
               <div className="text-center mb-8">

@@ -12,7 +12,7 @@ export const getOrders = async (req, res, next) => {
     let where = {};
     
     if (req.user.role !== 'admin') {
-      where.customerId = req.user.id;
+      where.userId = req.user.id;
     }
 
     const orders = await Order.findAll({
@@ -88,7 +88,7 @@ export const getOrder = async (req, res, next) => {
     }
 
     // Check authorization
-    if (order.customerId !== req.user.id && req.user.role !== 'admin') {
+    if (order.userId !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         status: 'error',
         message: 'Not authorized to access this order'
@@ -153,13 +153,16 @@ export const createOrder = async (req, res, next) => {
     const totalAmount = baseAmount + gstAmount;
 
     const order = await Order.create({
-      customerId: req.user.id,
+      userId: req.user.id,
       pricingId,
       serviceId: pricing.serviceId,
       amount: totalAmount, // Total amount including GST
       baseAmount: baseAmount, // Original price before GST
       gstAmount: gstAmount, // GST amount (18%)
       gstRate: 18, // GST percentage
+      status: 'pending',
+      paymentStatus: 'pending',
+      paymentMethod: 'razorpay',
       customerDetails: {
         name: req.user.name,
         email: req.user.email,

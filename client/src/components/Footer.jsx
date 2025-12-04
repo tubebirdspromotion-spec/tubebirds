@@ -10,9 +10,8 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Company Info */}
           <div className="text-center sm:text-left">
-            <div className="flex items-center justify-center sm:justify-start space-x-2 mb-4">
-              <FaYoutube className="text-2xl sm:text-3xl text-red-600" />
-              <span className="text-xl sm:text-2xl font-bold text-white">TubeBirds</span>
+            <div className="flex items-center justify-center sm:justify-start mb-4">
+              <img src="/logo.png" alt="TubeBirds" className="h-16 sm:h-20 w-auto object-contain" />
             </div>
             <p className="text-xs sm:text-sm mb-4 px-4 sm:px-0">
               India's leading YouTube promotion agency. We help content creators grow their channels organically with proven strategies.

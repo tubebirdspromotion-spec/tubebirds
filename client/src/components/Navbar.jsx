@@ -52,26 +52,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group transition-all">
-            <motion.div
-              whileHover={{ rotate: 360, scale: 1.1 }}
-              transition={{ duration: 0.6, type: "spring" }}
-              className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-2xl transition-shadow"
-            >
-              <FaYoutube className="text-white text-xl sm:text-2xl" />
-            </motion.div>
-            <div className="hidden sm:block">
-              <div className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                <span className="text-gray-900">Tube</span>
-                <span className="text-red-600">Birds</span>
-              </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-semibold -mt-1 tracking-wide">Grow With Confidence</div>
-            </div>
-            <div className="block sm:hidden">
-              <div className="text-lg font-extrabold tracking-tight">
-                <span className="text-gray-900">Tube</span>
-                <span className="text-red-600">Birds</span>
-              </div>
-            </div>
+            <img
+              src="/logo.png"
+              alt="TubeBirds"
+              className="h-12 sm:h-16 md:h-20 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}

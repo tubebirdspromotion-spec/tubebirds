@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { FaShoppingBag, FaClock, FaCheckCircle, FaRocket, FaPlus } from 'react-icons/fa'
+import { FaShoppingBag, FaClock, FaCheckCircle, FaRocket, FaPlus, FaEye } from 'react-icons/fa'
 import api from '../../services/api'
 
 const Dashboard = () => {
@@ -61,6 +61,30 @@ const Dashboard = () => {
       bgColor: 'bg-purple-50'
     },
   ]
+
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'completed':
+        return '✅'
+      case 'processing':
+      case 'in-progress':
+        return '⏳'
+      case 'pending':
+        return '⏸️'
+      default:
+        return '❓'
+    }
+  }
+
+  const getPaymentStatusBadge = (status) => {
+    const badges = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-green-100 text-green-800',
+      failed: 'bg-red-100 text-red-800',
+      refunded: 'bg-gray-100 text-gray-800'
+    }
+    return badges[status] || badges.pending
+  }
 
   if (loading) {
     return (
@@ -157,25 +181,69 @@ const Dashboard = () => {
         ) : (
           <div className="space-y-4">
             {recentOrders.map((order) => (
-              <div key={order.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold text-gray-800">{order.serviceName}</h4>
-                    <p className="text-sm text-gray-600 mt-1">Order #{order.id}</p>
+              <Link key={order.id} to={`/dashboard/orders/${order.id}`} className="block">
+                <div className="border border-gray-200 rounded-lg p-4 hover:border-primary-600 hover:bg-gray-50 transition-all cursor-pointer">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg">{getStatusIcon(order.status)}</span>
+                        <h4 className="font-semibold text-gray-800">{order.serviceName}</h4>
+                        <span className="text-xs text-gray-500">({order.orderNumber})</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Plan: {order.planName}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-primary-600">₹{order.amount?.toLocaleString('en-IN')}</div>
+                      <div className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-IN')}</div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-700' :
-                      order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                      order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {order.status}
-                    </span>
-                    <p className="text-sm text-gray-600 mt-2">₹{order.amount?.toLocaleString()}</p>
+
+                  <div className="grid grid-cols-3 gap-4 mb-3 text-xs">
+                    <div className="bg-blue-50 rounded p-2">
+                      <div className="text-gray-600">Order Status</div>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
+                        order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                        order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                        order.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {order.status.replace('-', ' ').charAt(0).toUpperCase() + order.status.slice(1).replace('-', ' ')}
+                      </span>
+                    </div>
+                    <div className="bg-green-50 rounded p-2">
+                      <div className="text-gray-600">Payment Status</div>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getPaymentStatusBadge(order.paymentStatus)}`}>
+                        {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                      </span>
+                    </div>
+                    <div className="bg-purple-50 rounded p-2">
+                      <div className="text-gray-600">Progress</div>
+                      <div className="text-lg font-bold text-purple-600 mt-1">{order.progress || 0}%</div>
+                    </div>
+                  </div>
+
+                  {order.targetQuantity && (
+                    <div className="mb-3">
+                      <div className="flex justify-between items-center text-xs mb-1">
+                        <span className="text-gray-600">Progress</span>
+                        <span className="font-semibold">{order.completedQuantity || 0} / {order.targetQuantity}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all"
+                          style={{ width: `${((order.completedQuantity || 0) / order.targetQuantity) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>Created: {new Date(order.createdAt).toLocaleDateString('en-IN')}</span>
+                    <FaEye className="text-blue-500" />
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
