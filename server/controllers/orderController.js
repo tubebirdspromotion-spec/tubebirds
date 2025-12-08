@@ -47,22 +47,32 @@ export const getOrders = async (req, res, next) => {
     const ordersWithFallback = orders.map(order => {
       const orderData = order.toJSON();
       
+      // Parse planDetails if it's a string
+      let planDetails = orderData.planDetails;
+      if (typeof planDetails === 'string') {
+        try {
+          planDetails = JSON.parse(planDetails);
+        } catch (e) {
+          planDetails = null;
+        }
+      }
+      
       // Check if pricing exists and has data
       const hasPricing = orderData.pricing && Object.keys(orderData.pricing).length > 0;
       // If pricing is null/empty but planDetails exists, create virtual pricing
-      if (!hasPricing && orderData.planDetails) {
+      if (!hasPricing && planDetails) {
         orderData.pricing = {
-          planName: orderData.planDetails.name,
-          category: orderData.planDetails.category,
-          price: orderData.planDetails.price,
-          quantity: orderData.planDetails.quantity
+          planName: planDetails.name,
+          category: planDetails.category,
+          price: planDetails.price,
+          quantity: planDetails.quantity
         };
       }
       
       // Check if service exists and has data
       const hasService = orderData.service && Object.keys(orderData.service).length > 0;
       // If service is null/empty but planDetails exists, create virtual service
-      if (!hasService && orderData.planDetails) {
+      if (!hasService && planDetails) {
         const categoryTitleMap = {
           'views': 'YouTube Views',
           'subscribers': 'YouTube Subscribers',
@@ -70,7 +80,7 @@ export const getOrders = async (req, res, next) => {
           'revenue': 'YouTube Revenue'
         };
         orderData.service = {
-          title: categoryTitleMap[orderData.planDetails.category] || 'YouTube Service'
+          title: categoryTitleMap[planDetails.category] || 'YouTube Service'
         };
       }
       
@@ -144,23 +154,36 @@ export const getOrder = async (req, res, next) => {
     const orderResponse = order.toJSON();
     console.log('🔍 Before transformation - pricing:', orderResponse.pricing);
     console.log('🔍 Before transformation - planDetails:', orderResponse.planDetails);
+    console.log('🔍 planDetails type:', typeof orderResponse.planDetails);
+    
+    // Parse planDetails if it's a string
+    let planDetails = orderResponse.planDetails;
+    if (typeof planDetails === 'string') {
+      try {
+        planDetails = JSON.parse(planDetails);
+        console.log('📋 Parsed planDetails:', planDetails);
+      } catch (e) {
+        console.error('❌ Failed to parse planDetails:', e);
+        planDetails = null;
+      }
+    }
     
     // Check if pricing is null or empty object
     const hasPricing = orderResponse.pricing && Object.keys(orderResponse.pricing).length > 0;
-    if (!hasPricing && orderResponse.planDetails) {
+    if (!hasPricing && planDetails) {
       console.log('✨ Creating virtual pricing from planDetails');
       orderResponse.pricing = {
-        planName: orderResponse.planDetails.name,
-        category: orderResponse.planDetails.category,
-        price: orderResponse.planDetails.price,
-        quantity: orderResponse.planDetails.quantity
+        planName: planDetails.name,
+        category: planDetails.category,
+        price: planDetails.price,
+        quantity: planDetails.quantity
       };
       console.log('✅ Virtual pricing created:', orderResponse.pricing);
     }
     
     // Check if service is null or empty object
     const hasService = orderResponse.service && Object.keys(orderResponse.service).length > 0;
-    if (!hasService && orderResponse.planDetails) {
+    if (!hasService && planDetails) {
       console.log('✨ Creating virtual service from planDetails');
       // Map category to service title
       const categoryTitleMap = {
@@ -170,7 +193,7 @@ export const getOrder = async (req, res, next) => {
         'revenue': 'YouTube Revenue'
       };
       orderResponse.service = {
-        title: categoryTitleMap[orderResponse.planDetails.category] || 'YouTube Service'
+        title: categoryTitleMap[planDetails.category] || 'YouTube Service'
       };
     }
 

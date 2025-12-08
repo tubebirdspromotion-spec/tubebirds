@@ -239,12 +239,22 @@ export const getClientDashboard = async (req, res, next) => {
     const formattedOrders = recentOrders.map(order => {
       const orderData = order.toJSON();
       
+      // Parse planDetails if it's a string
+      let planDetails = orderData.planDetails;
+      if (typeof planDetails === 'string') {
+        try {
+          planDetails = JSON.parse(planDetails);
+        } catch (e) {
+          planDetails = null;
+        }
+      }
+      
       // Use planDetails as fallback if pricing/service are null
       const serviceName = orderData.service?.title || 
-                         (orderData.planDetails?.category ? categoryTitleMap[orderData.planDetails.category] : null) ||
+                         (planDetails?.category ? categoryTitleMap[planDetails.category] : null) ||
                          'Service';
       const planName = orderData.pricing?.planName || 
-                      orderData.planDetails?.name || 
+                      planDetails?.name || 
                       'N/A';
       
       return {
