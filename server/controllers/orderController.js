@@ -155,6 +155,8 @@ export const getOrder = async (req, res, next) => {
     console.log('🔍 Before transformation - pricing:', orderResponse.pricing);
     console.log('🔍 Before transformation - planDetails:', orderResponse.planDetails);
     console.log('🔍 planDetails type:', typeof orderResponse.planDetails);
+    console.log('🔍 channelDetails type:', typeof orderResponse.channelDetails);
+    console.log('🔍 channelDetails value:', orderResponse.channelDetails);
     
     // Parse planDetails if it's a string
     let planDetails = orderResponse.planDetails;
@@ -165,6 +167,16 @@ export const getOrder = async (req, res, next) => {
       } catch (e) {
         console.error('❌ Failed to parse planDetails:', e);
         planDetails = null;
+      }
+    }
+    
+    // Parse channelDetails if it's a string
+    if (typeof orderResponse.channelDetails === 'string') {
+      try {
+        orderResponse.channelDetails = JSON.parse(orderResponse.channelDetails);
+        console.log('📺 Parsed channelDetails:', orderResponse.channelDetails);
+      } catch (e) {
+        console.error('❌ Failed to parse channelDetails:', e);
       }
     }
     

@@ -36,6 +36,9 @@ const OrderDetail = () => {
       console.log('🎯 Service:', orderData.service)
       console.log('💳 Pricing:', orderData.pricing)
       console.log('📺 Channel Details:', orderData.channelDetails)
+      console.log('📺 Channel Details type:', typeof orderData.channelDetails)
+      console.log('📺 Channel Details is object?:', typeof orderData.channelDetails === 'object')
+      console.log('📺 Channel Details keys:', orderData.channelDetails ? Object.keys(orderData.channelDetails) : 'null')
       setOrder(orderData)
     } catch (error) {
       console.error('Error fetching order:', error)
