@@ -25,6 +25,9 @@ export const createRazorpayOrder = async (req, res, next) => {
 
     const { pricingId, videoUrl, channelName, channelUrl, planDetails } = req.body;
 
+    // Debug logging
+    console.log('🔍 Request body:', { pricingId, videoUrl, channelName, channelUrl, planDetails });
+
     // Validate required fields
     if ((!pricingId && !planDetails) || !videoUrl) {
       return res.status(400).json({

@@ -47,8 +47,10 @@ export const getOrders = async (req, res, next) => {
     const ordersWithFallback = orders.map(order => {
       const orderData = order.toJSON();
       
-      // If pricing is null but planDetails exists, create virtual pricing
-      if (!orderData.pricing && orderData.planDetails) {
+      // Check if pricing exists and has data
+      const hasPricing = orderData.pricing && Object.keys(orderData.pricing).length > 0;
+      // If pricing is null/empty but planDetails exists, create virtual pricing
+      if (!hasPricing && orderData.planDetails) {
         orderData.pricing = {
           planName: orderData.planDetails.name,
           category: orderData.planDetails.category,
@@ -57,8 +59,10 @@ export const getOrders = async (req, res, next) => {
         };
       }
       
-      // If service is null but planDetails exists, create virtual service
-      if (!orderData.service && orderData.planDetails) {
+      // Check if service exists and has data
+      const hasService = orderData.service && Object.keys(orderData.service).length > 0;
+      // If service is null/empty but planDetails exists, create virtual service
+      if (!hasService && orderData.planDetails) {
         const categoryTitleMap = {
           'views': 'YouTube Views',
           'subscribers': 'YouTube Subscribers',
@@ -138,15 +142,26 @@ export const getOrder = async (req, res, next) => {
 
     // If pricing/service associations are null but planDetails exists, create virtual objects
     const orderResponse = order.toJSON();
-    if (!orderResponse.pricing && orderResponse.planDetails) {
+    console.log('🔍 Before transformation - pricing:', orderResponse.pricing);
+    console.log('🔍 Before transformation - planDetails:', orderResponse.planDetails);
+    
+    // Check if pricing is null or empty object
+    const hasPricing = orderResponse.pricing && Object.keys(orderResponse.pricing).length > 0;
+    if (!hasPricing && orderResponse.planDetails) {
+      console.log('✨ Creating virtual pricing from planDetails');
       orderResponse.pricing = {
         planName: orderResponse.planDetails.name,
         category: orderResponse.planDetails.category,
         price: orderResponse.planDetails.price,
         quantity: orderResponse.planDetails.quantity
       };
+      console.log('✅ Virtual pricing created:', orderResponse.pricing);
     }
-    if (!orderResponse.service && orderResponse.planDetails) {
+    
+    // Check if service is null or empty object
+    const hasService = orderResponse.service && Object.keys(orderResponse.service).length > 0;
+    if (!hasService && orderResponse.planDetails) {
+      console.log('✨ Creating virtual service from planDetails');
       // Map category to service title
       const categoryTitleMap = {
         'views': 'YouTube Views',
