@@ -187,11 +187,11 @@ const OrderDetail = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-semibold text-gray-600">Plan Name</label>
-                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.planName || order.pricing?.name || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.planName || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Service</label>
-                <p className="text-lg font-medium text-gray-900 mt-1">{order.service?.name || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">{order.service?.title || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Initial Target</label>
@@ -199,18 +199,18 @@ const OrderDetail = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Category</label>
-                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.category || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1 capitalize">{order.pricing?.category || 'N/A'}</p>
               </div>
             </div>
           </div>
 
           {/* Channel Details */}
-          {order.channelDetails && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <FaYoutube className="text-red-600" />
-                Channel Details
-              </h2>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <FaYoutube className="text-red-600" />
+              Channel Details
+            </h2>
+            {order.channelDetails && (typeof order.channelDetails === 'object' && Object.keys(order.channelDetails).length > 0) ? (
               <div className="space-y-3">
                 {order.channelDetails.channelName && (
                   <div>
@@ -225,7 +225,7 @@ const OrderDetail = () => {
                       href={order.channelDetails.channelUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
+                      className="text-blue-600 hover:underline break-all block"
                     >
                       {order.channelDetails.channelUrl}
                     </a>
@@ -238,15 +238,23 @@ const OrderDetail = () => {
                       href={order.channelDetails.videoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline break-all"
+                      className="text-blue-600 hover:underline break-all block"
                     >
                       {order.channelDetails.videoUrl}
                     </a>
                   </div>
                 )}
+                {order.channelDetails.videoId && (
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Video ID</label>
+                    <p className="text-gray-900 mt-1 font-mono text-sm">{order.channelDetails.videoId}</p>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-gray-500 text-sm">No channel details available</p>
+            )}
+          </div>
 
           {/* Progress Tracking */}
           <div className="bg-white rounded-lg shadow-md p-6">
