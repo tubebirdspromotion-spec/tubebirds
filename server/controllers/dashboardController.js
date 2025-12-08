@@ -207,12 +207,14 @@ export const getClientDashboard = async (req, res, next) => {
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['id', 'planName', 'quantity', 'price', 'category', 'description']
+          attributes: ['id', 'planName', 'quantity', 'price', 'category', 'description'],
+          required: false
         },
         {
           model: Service,
           as: 'service',
-          attributes: ['id', 'title', 'slug', 'icon']
+          attributes: ['id', 'title', 'slug', 'icon'],
+          required: false
         },
         {
           model: User,
@@ -225,25 +227,45 @@ export const getClientDashboard = async (req, res, next) => {
       raw: false
     });
 
-    // Format recent orders for frontend
-    const formattedOrders = recentOrders.map(order => ({
-      id: order.id,
-      orderNumber: order.orderNumber,
-      serviceName: order.service?.title || 'Service',
-      planName: order.pricing?.planName || 'N/A',
-      status: order.status,
-      paymentStatus: order.paymentStatus,
-      amount: order.amount,
-      baseAmount: order.baseAmount,
-      gstAmount: order.gstAmount,
-      progress: order.progress,
-      targetQuantity: order.targetQuantity,
-      completedQuantity: order.completedQuantity,
-      createdAt: order.createdAt,
-      startDate: order.startDate,
-      completionDate: order.completionDate,
-      estimatedCompletionDate: order.estimatedCompletionDate
-    }));
+    // Category to service title mapping
+    const categoryTitleMap = {
+      'views': 'YouTube Views',
+      'subscribers': 'YouTube Subscribers',
+      'monetization': 'YouTube Monetization',
+      'revenue': 'YouTube Revenue'
+    };
+
+    // Format recent orders for frontend with planDetails fallback
+    const formattedOrders = recentOrders.map(order => {
+      const orderData = order.toJSON();
+      
+      // Use planDetails as fallback if pricing/service are null
+      const serviceName = orderData.service?.title || 
+                         (orderData.planDetails?.category ? categoryTitleMap[orderData.planDetails.category] : null) ||
+                         'Service';
+      const planName = orderData.pricing?.planName || 
+                      orderData.planDetails?.name || 
+                      'N/A';
+      
+      return {
+        id: orderData.id,
+        orderNumber: orderData.orderNumber,
+        serviceName,
+        planName,
+        status: orderData.status,
+        paymentStatus: orderData.paymentStatus,
+        amount: orderData.amount,
+        baseAmount: orderData.baseAmount,
+        gstAmount: orderData.gstAmount,
+        progress: orderData.progress,
+        targetQuantity: orderData.targetQuantity,
+        completedQuantity: orderData.completedQuantity,
+        createdAt: orderData.createdAt,
+        startDate: orderData.startDate,
+        completionDate: orderData.completionDate,
+        estimatedCompletionDate: orderData.estimatedCompletionDate
+      };
+    });
 
     res.status(200).json({
       status: 'success',

@@ -31,7 +31,12 @@ const OrderDetail = () => {
     try {
       setLoading(true)
       const response = await api.get(`/orders/${id}`)
-      setOrder(response.data.data.order)
+      const orderData = response.data.data.order
+      console.log('📦 Full Order Data:', orderData)
+      console.log('🎯 Service:', orderData.service)
+      console.log('💳 Pricing:', orderData.pricing)
+      console.log('📺 Channel Details:', orderData.channelDetails)
+      setOrder(orderData)
     } catch (error) {
       console.error('Error fetching order:', error)
       toast.error('Failed to load order details')

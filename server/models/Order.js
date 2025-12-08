@@ -166,6 +166,12 @@ Order.init(
       type: DataTypes.JSON,
       defaultValue: [],
       comment: 'Array of uploaded deliverable files'
+    },
+    // Plan Details (for frontend-only plans without DB entry)
+    planDetails: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      comment: 'Stores plan info when pricingId is null: {name, price, quantity, category}'
     }
   },
   {

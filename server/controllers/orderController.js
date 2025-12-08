@@ -31,20 +31,52 @@ export const getOrders = async (req, res, next) => {
         },
         {
           model: Pricing,
-          as: 'pricing'
+          as: 'pricing',
+          required: false
         },
         {
           model: Service,
-          as: 'service'
+          as: 'service',
+          required: false
         }
       ],
       order: [['createdAt', 'DESC']]
     });
 
+    // Transform orders to include planDetails as fallback
+    const ordersWithFallback = orders.map(order => {
+      const orderData = order.toJSON();
+      
+      // If pricing is null but planDetails exists, create virtual pricing
+      if (!orderData.pricing && orderData.planDetails) {
+        orderData.pricing = {
+          planName: orderData.planDetails.name,
+          category: orderData.planDetails.category,
+          price: orderData.planDetails.price,
+          quantity: orderData.planDetails.quantity
+        };
+      }
+      
+      // If service is null but planDetails exists, create virtual service
+      if (!orderData.service && orderData.planDetails) {
+        const categoryTitleMap = {
+          'views': 'YouTube Views',
+          'subscribers': 'YouTube Subscribers',
+          'monetization': 'YouTube Monetization',
+          'revenue': 'YouTube Revenue'
+        };
+        orderData.service = {
+          title: categoryTitleMap[orderData.planDetails.category] || 'YouTube Service'
+        };
+      }
+      
+      return orderData;
+    });
+
     res.status(200).json({
       status: 'success',
-      results: orders.length,
-      data: { orders }
+      results: ordersWithFallback.length,
+      data: { orders: ordersWithFallback }
     });
   } catch (error) {
     next(error);
@@ -95,9 +127,41 @@ export const getOrder = async (req, res, next) => {
       });
     }
 
+    // Debug logging
+    console.log('📦 Order ID:', order.id);
+    console.log('🎯 Service:', order.service ? { id: order.service.id, title: order.service.title } : 'NULL');
+    console.log('💳 Pricing:', order.pricing ? { id: order.pricing.id, planName: order.pricing.planName } : 'NULL');
+    console.log('📺 Channel Details:', order.channelDetails);
+    console.log('🔢 ServiceId:', order.serviceId);
+    console.log('🔢 PricingId:', order.pricingId);
+    console.log('📋 Plan Details:', order.planDetails);
+
+    // If pricing/service associations are null but planDetails exists, create virtual objects
+    const orderResponse = order.toJSON();
+    if (!orderResponse.pricing && orderResponse.planDetails) {
+      orderResponse.pricing = {
+        planName: orderResponse.planDetails.name,
+        category: orderResponse.planDetails.category,
+        price: orderResponse.planDetails.price,
+        quantity: orderResponse.planDetails.quantity
+      };
+    }
+    if (!orderResponse.service && orderResponse.planDetails) {
+      // Map category to service title
+      const categoryTitleMap = {
+        'views': 'YouTube Views',
+        'subscribers': 'YouTube Subscribers',
+        'monetization': 'YouTube Monetization',
+        'revenue': 'YouTube Revenue'
+      };
+      orderResponse.service = {
+        title: categoryTitleMap[orderResponse.planDetails.category] || 'YouTube Service'
+      };
+    }
+
     res.status(200).json({
       status: 'success',
-      data: { order }
+      data: { order: orderResponse }
     });
   } catch (error) {
     next(error);
