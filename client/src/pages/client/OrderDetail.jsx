@@ -192,7 +192,9 @@ const OrderDetail = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-semibold text-gray-600">Plan Name</label>
-                <p className="text-lg font-medium text-gray-900 mt-1">{order.pricing?.planName || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">
+                  {order.pricing?.planName || order.planDetails?.name || 'N/A'}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Service</label>
@@ -200,11 +202,15 @@ const OrderDetail = () => {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Initial Target</label>
-                <p className="text-lg font-medium text-gray-900 mt-1">{order.targetQuantity || 0}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1">
+                  {order.targetQuantity || order.planDetails?.quantity || 0}
+                </p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Category</label>
-                <p className="text-lg font-medium text-gray-900 mt-1 capitalize">{order.pricing?.category || 'N/A'}</p>
+                <p className="text-lg font-medium text-gray-900 mt-1 capitalize">
+                  {order.pricing?.category || order.planDetails?.category || 'N/A'}
+                </p>
               </div>
             </div>
           </div>

@@ -200,7 +200,7 @@ const Orders = () => {
 
                 <div className="border-t pt-4 flex flex-wrap gap-3">
                   <Link
-                    to={`/client/orders/${order.id}`}
+                    to={`/dashboard/orders/${order.id}`}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                   >
                     <FaEye /> View Details
