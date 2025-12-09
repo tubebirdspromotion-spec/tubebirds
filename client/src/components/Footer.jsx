@@ -48,12 +48,12 @@ const Footer = () => {
           <div className="text-center sm:text-left">
             <h3 className="text-white font-bold mb-3 sm:mb-4 text-sm sm:text-base">Our Services</h3>
             <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-              <li><Link to="/services/youtube-video-promotion" className="hover:text-primary-400 transition-colors">YouTube Promotion</Link></li>
-              <li><Link to="/services/youtube-video-seo" className="hover:text-primary-400 transition-colors">Video SEO</Link></li>
-              <li><Link to="/services/youtube-video-monetisation" className="hover:text-primary-400 transition-colors">Monetization</Link></li>
-              <li><Link to="/services/google-ads-services" className="hover:text-primary-400 transition-colors">Google Ads</Link></li>
-              <li><Link to="/services/website-development-services" className="hover:text-primary-400 transition-colors">Web Development</Link></li>
-              <li><Link to="/services/website-seo-services" className="hover:text-primary-400 transition-colors">Website SEO</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">YouTube Promotion</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">Video SEO</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">Monetization</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">Google Ads</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">Web Development</Link></li>
+              <li><Link to="/services" className="hover:text-primary-400 transition-colors">Website SEO</Link></li>
             </ul>
           </div>
 

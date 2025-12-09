@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { Parallax } from 'react-parallax'
 import { 
@@ -13,6 +13,8 @@ import toast from 'react-hot-toast'
 
 const Pricing = () => {
   const navigate = useNavigate()
+  const { category } = useParams()
+  const location = useLocation()
   const { isAuthenticated, user, token } = useSelector((state) => state.auth)
   const [selectedCategory, setSelectedCategory] = useState('views')
   const [selectedPlan, setSelectedPlan] = useState(null)
@@ -20,6 +22,28 @@ const Pricing = () => {
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], [0, -50])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+
+  // Update selectedCategory based on URL parameter
+  useEffect(() => {
+    if (category) {
+      const validCategories = ['views', 'subscribers', 'monetization', 'revenue']
+      if (validCategories.includes(category)) {
+        setSelectedCategory(category)
+      } else {
+        // If invalid category in URL, redirect to default
+        navigate('/pricing/views', { replace: true })
+      }
+    } else {
+      // If no category in URL, redirect to default
+      navigate('/pricing/views', { replace: true })
+    }
+  }, [category, navigate])
+
+  // Handle category change
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId)
+    navigate(`/pricing/${categoryId}`)
+  }
 
   const openModal = (plan) => {
     setSelectedPlan(plan)
@@ -58,8 +82,6 @@ const Pricing = () => {
             '5,000+ Real YouTube Views',
             '100% Safe & Organic',
             'Gradual Delivery (Natural Growth)',
-            'No Password Required',
-            'Retention Rate: 60-80%',
             'Start Time: 12-24 Hours',
             'Completion: 5-7 Days',
             '24/7 Customer Support'
@@ -81,7 +103,6 @@ const Pricing = () => {
             '10,000+ Real YouTube Views',
             '100% Safe & Organic',
             'Natural Delivery Pattern',
-            'High Retention Rate: 70-85%',
             'Boost Search Rankings',
             'Start Time: 6-12 Hours',
             'Completion: 7-10 Days',
@@ -103,7 +124,6 @@ const Pricing = () => {
           features: [
             '20,000+ Real YouTube Views',
             'Premium Quality Views',
-            'High Retention: 75-90%',
             'Faster Delivery',
             'Improved Channel Authority',
             'Start Time: 3-6 Hours',
@@ -126,9 +146,7 @@ const Pricing = () => {
           features: [
             '50,000+ Real YouTube Views',
             'Premium Elite Quality',
-            'Maximum Retention: 80-95%',
             'Rapid Delivery',
-            'Massive Reach Expansion',
             'Viral Potential Boost',
             'Start Time: 1-3 Hours',
             'Completion: 14-20 Days'
@@ -149,9 +167,7 @@ const Pricing = () => {
           features: [
             '1,00,000+ Real YouTube Views',
             'Ultra Premium Quality',
-            'Highest Retention: 85-98%',
             'Lightning Fast Delivery',
-            'Guaranteed Trending Potential',
             'Algorithm Optimization',
             'Start Time: Instant',
             'Completion: 20-30 Days'
@@ -172,9 +188,7 @@ const Pricing = () => {
           features: [
             '10,00,000+ Real YouTube Views',
             'Absolute Premium Quality',
-            'Near-Perfect Retention: 90-99%',
             'Maximum Speed Delivery',
-            'Guaranteed Viral Status',
             'Complete Channel Transformation',
             'Celebrity-Level Reach',
             'White-Glove Service & Support'
@@ -347,7 +361,6 @@ const Pricing = () => {
             '25,000-30,000 Real Views',
             '100% Safe & Organic',
             'Natural Watch Pattern',
-            'High Retention Rate',
             'Progress Towards Monetization',
             'Start Time: 24 Hours',
             'Completion: 10-15 Days'
@@ -369,7 +382,6 @@ const Pricing = () => {
             '500 Watch Hours Guaranteed',
             '70,000-80,000 Real Views',
             'Premium Quality Views',
-            'High Retention (75-85%)',
             'Faster Path to Monetization',
             'Algorithm-Friendly Growth',
             'Start Time: 12 Hours',
@@ -394,7 +406,6 @@ const Pricing = () => {
             '250 Real Subscribers',
             'Complete Monetization Package',
             'Premium Quality Engagement',
-            'High Retention (80-90%)',
             'Start Time: 6 Hours',
             'Completion: 20-30 Days'
           ],
@@ -416,7 +427,6 @@ const Pricing = () => {
             '2.5-3 Lakh Real Views',
             '500 Real Subscribers',
             'Premium Elite Package',
-            'Maximum Retention (85-95%)',
             'Rapid Channel Growth',
             'Start Time: 3 Hours',
             'Completion: 25-35 Days'
@@ -439,7 +449,6 @@ const Pricing = () => {
             '3.75-4.5 Lakh Real Views',
             '750 Real Subscribers',
             'Authority-Building Package',
-            'Near-Perfect Retention (90-95%)',
             'Massive Channel Boost',
             'Start Time: 1 Hour',
             'Completion: 30-40 Days'
@@ -462,7 +471,6 @@ const Pricing = () => {
             '5-6 Lakh Real Views',
             '1,000 Real Subscribers (Monetization Ready!)',
             'Ultimate Growth Package',
-            'Maximum Retention (95-99%)',
             'Complete Channel Transformation',
             'Start Time: Instant',
             'Completion: 35-50 Days'
@@ -481,8 +489,8 @@ const Pricing = () => {
           badge: 'FIRST EARNINGS',
           icon: <FaMoneyBillWave className="text-4xl" />,
           quantity: '8K-12K Views = $8-$12 Revenue',
-          price: 2500,
-          originalPrice: 5000,
+          price: 1600,
+          originalPrice: 3200,
           discount: 50,
           popular: false,
           gradient: 'from-green-500 to-emerald-600',
@@ -504,8 +512,8 @@ const Pricing = () => {
           badge: 'POPULAR CHOICE',
           icon: <FaChartLine className="text-4xl" />,
           quantity: '17K-25K Views = $17-$25 Revenue',
-          price: 5000,
-          originalPrice: 10000,
+          price: 3200,
+          originalPrice: 6400,
           discount: 50,
           popular: true,
           gradient: 'from-blue-500 to-cyan-600',
@@ -527,8 +535,8 @@ const Pricing = () => {
           badge: 'BEST VALUE',
           icon: <FaTrophy className="text-4xl" />,
           quantity: '35K-50K Views = $35-$50 Revenue',
-          price: 9000,
-          originalPrice: 18000,
+          price: 6400,
+          originalPrice: 12800,
           discount: 50,
           popular: true,
           gradient: 'from-purple-500 to-violet-600',
@@ -550,8 +558,8 @@ const Pricing = () => {
           badge: 'HIGH EARNER',
           icon: <FaCrown className="text-4xl" />,
           quantity: '70K-100K Views = $70-$100 Revenue',
-          price: 16000,
-          originalPrice: 32000,
+          price: 12000,
+          originalPrice: 24000,
           discount: 50,
           popular: true,
           gradient: 'from-orange-500 to-red-600',
@@ -573,8 +581,8 @@ const Pricing = () => {
           badge: 'MAXIMUM PROFIT',
           icon: <FaGem className="text-4xl" />,
           quantity: '140K-2L Views = $140-$200 Revenue',
-          price: 30000,
-          originalPrice: 60000,
+          price: 23000,
+          originalPrice: 46000,
           discount: 50,
           popular: false,
           gradient: 'from-yellow-500 to-amber-600',
@@ -615,7 +623,7 @@ const Pricing = () => {
     if (!isAuthenticated && !hasToken) {
       console.log('❌ No authentication, redirecting to login')
       toast.error('Please login to place an order')
-      navigate('/login', { state: { returnTo: '/pricing' } })
+      navigate('/login', { state: { returnTo: `/pricing/${selectedCategory}` } })
       return
     }
     
@@ -734,7 +742,7 @@ const Pricing = () => {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => handleCategoryChange(cat.id)}
                 className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
                   selectedCategory === cat.id
                     ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-lg transform scale-105'
@@ -836,23 +844,35 @@ const Pricing = () => {
 
                   {/* Price */}
                   <div className="relative">
-                    {/* Original Price - Strikethrough */}
-                    <div className="text-xs mb-1">
-                      <span className="line-through opacity-75">₹{plan.originalPrice.toLocaleString()}</span>
-                      <span className="ml-1.5 bg-yellow-400 text-gray-900 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                        {plan.discount}% OFF
-                      </span>
-                    </div>
-                    
-                    {/* Current Price */}
-                    <div className="text-3xl md:text-4xl font-black mb-1">
-                      ₹{plan.price.toLocaleString()}
-                    </div>
-                    
-                    {/* Price Label */}
-                    <div className="text-sm font-semibold opacity-90">
-                      In Just ₹{plan.price.toLocaleString()}! 🎉
-                    </div>
+                    {selectedCategory === 'subscribers' ? (
+                      /* Unavailable Message for Subscribers */
+                      <div className="py-4">
+                        <div className="bg-yellow-100 text-yellow-800 px-3 py-2 rounded-lg mb-2">
+                          <p className="text-sm font-bold">Currently Unavailable</p>
+                        </div>
+                        <p className="text-xs text-white/90">Will be available soon</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Original Price - Strikethrough */}
+                        <div className="text-xs mb-1">
+                          <span className="line-through opacity-75">₹{plan.originalPrice.toLocaleString()}</span>
+                          <span className="ml-1.5 bg-yellow-400 text-gray-900 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                            {plan.discount}% OFF
+                          </span>
+                        </div>
+                        
+                        {/* Current Price */}
+                        <div className="text-3xl md:text-4xl font-black mb-1">
+                          ₹{plan.price.toLocaleString()}
+                        </div>
+                        
+                        {/* Price Label */}
+                        <div className="text-sm font-semibold opacity-90">
+                          In Just ₹{plan.price.toLocaleString()}! 🎉
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -875,27 +895,49 @@ const Pricing = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-1.5">
-                    {/* Buy Now Button */}
-                    <button
-                      onClick={() => handleOrderNow(plan)}
-                      className={`w-full py-2.5 rounded-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg hover:shadow-xl transform hover:scale-105 ${
-                        plan.popular
-                          ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700'
-                          : 'bg-gradient-to-r from-gray-900 to-gray-800 text-white hover:from-gray-800 hover:to-gray-700'
-                      }`}
-                    >
-                      <FaRocket className="text-xs" />
-                      <span>Buy Now</span>
-                    </button>
+                    {selectedCategory === 'subscribers' ? (
+                      /* Disabled Buttons for Subscribers */
+                      <>
+                        <button
+                          disabled
+                          className="w-full py-2.5 rounded-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg bg-gray-400 text-gray-700 cursor-not-allowed opacity-60"
+                        >
+                          <FaRocket className="text-xs" />
+                          <span>Currently Unavailable</span>
+                        </button>
 
-                    {/* Info Button */}
-                    <button
-                      onClick={() => openModal(plan)}
-                      className="w-full py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-1.5 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
-                    >
-                      <FaInfoCircle className="text-xs" />
-                      <span>More Details</span>
-                    </button>
+                        <button
+                          disabled
+                          className="w-full py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-1.5 border-2 border-gray-300 text-gray-500 cursor-not-allowed opacity-60"
+                        >
+                          <FaInfoCircle className="text-xs" />
+                          <span>More Details</span>
+                        </button>
+                      </>
+                    ) : (
+                      /* Active Buttons for Other Categories */
+                      <>
+                        <button
+                          onClick={() => handleOrderNow(plan)}
+                          className={`w-full py-2.5 rounded-lg font-bold text-sm transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                            plan.popular
+                              ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700'
+                              : 'bg-gradient-to-r from-gray-900 to-gray-800 text-white hover:from-gray-800 hover:to-gray-700'
+                          }`}
+                        >
+                          <FaRocket className="text-xs" />
+                          <span>Buy Now</span>
+                        </button>
+
+                        <button
+                          onClick={() => openModal(plan)}
+                          className="w-full py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-1.5 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+                        >
+                          <FaInfoCircle className="text-xs" />
+                          <span>More Details</span>
+                        </button>
+                      </>
+                    )}
                   </div>
 
                   {/* Trust Badge */}

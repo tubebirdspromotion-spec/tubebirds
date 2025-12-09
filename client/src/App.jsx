@@ -98,6 +98,7 @@ function App() {
         <Route path="services" element={<ServicesPage />} />
         <Route path="services/:slug" element={<ServiceDetailPage />} />
         <Route path="pricing" element={<PricingPage />} />
+        <Route path="pricing/:category" element={<PricingPage />} />
         <Route path="portfolio" element={<PortfolioPage />} />
         <Route path="contact" element={<ContactPage />} />
         <Route path="login" element={<LoginPage />} />

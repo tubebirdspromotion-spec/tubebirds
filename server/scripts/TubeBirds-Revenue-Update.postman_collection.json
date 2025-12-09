@@ -1,0 +1,94 @@
+{
+  "info": {
+    "name": "TubeBirds - Revenue Pricing Update",
+    "description": "Collection for updating Revenue Plan prices via API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Update Revenue Prices",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text",
+            "description": "Admin token from login"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/update-revenue-prices",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "admin",
+            "update-revenue-prices"
+          ]
+        },
+        "description": "Updates all Revenue plan prices with new pricing structure:\n\n- Revenue Starter: ₹1,600 (was ₹2,500)\n- Revenue Booster: ₹3,200 (was ₹5,000)\n- Revenue Pro: ₹6,400 (was ₹9,000)\n- Revenue Elite: ₹12,000 (was ₹16,000)\n- Revenue Master: ₹23,000 (was ₹30,000)\n\nAll with 0% discount (was 50% discount)",
+        "response": [
+          {
+            "name": "Success Response",
+            "originalRequest": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{admin_token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/admin/update-revenue-prices",
+                "host": [
+                  "{{base_url}}"
+                ],
+                "path": [
+                  "api",
+                  "admin",
+                  "update-revenue-prices"
+                ]
+              }
+            },
+            "status": "OK",
+            "code": 200,
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": "{\n  \"success\": true,\n  \"message\": \"Revenue prices updated successfully\",\n  \"updatedCount\": 5,\n  \"updatedPlans\": [\n    {\n      \"planName\": \"Revenue Starter\",\n      \"oldPrice\": 2500,\n      \"newPrice\": 1600,\n      \"oldDiscount\": 50,\n      \"newDiscount\": 0,\n      \"updatedAt\": \"2025-12-10T10:30:00Z\"\n    },\n    {\n      \"planName\": \"Revenue Booster\",\n      \"oldPrice\": 5000,\n      \"newPrice\": 3200,\n      \"oldDiscount\": 50,\n      \"newDiscount\": 0,\n      \"updatedAt\": \"2025-12-10T10:30:00Z\"\n    },\n    {\n      \"planName\": \"Revenue Pro\",\n      \"oldPrice\": 9000,\n      \"newPrice\": 6400,\n      \"oldDiscount\": 50,\n      \"newDiscount\": 0,\n      \"updatedAt\": \"2025-12-10T10:30:00Z\"\n    },\n    {\n      \"planName\": \"Revenue Elite\",\n      \"oldPrice\": 16000,\n      \"newPrice\": 12000,\n      \"oldDiscount\": 50,\n      \"newDiscount\": 0,\n      \"updatedAt\": \"2025-12-10T10:30:00Z\"\n    },\n    {\n      \"planName\": \"Revenue Master\",\n      \"oldPrice\": 30000,\n      \"newPrice\": 23000,\n      \"oldDiscount\": 50,\n      \"newDiscount\": 0,\n      \"updatedAt\": \"2025-12-10T10:30:00Z\"\n    }\n  ]\n}"
+          }
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string",
+      "description": "Base URL of your TubeBirds API server"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string",
+      "description": "Admin authentication token - Get this by logging in as admin and copying the token from the response"
+    }
+  ]
+}
