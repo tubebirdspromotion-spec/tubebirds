@@ -11,13 +11,28 @@ const Pricing = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingPlan, setEditingPlan] = useState(null)
+  const [showPriceModal, setShowPriceModal] = useState(false)
+  const [editingPrice, setEditingPrice] = useState(null)
+  const [priceFormData, setPriceFormData] = useState({
+    originalPrice: '',
+    discount: '',
+    price: ''
+  })
   const [formData, setFormData] = useState({
     serviceId: '',
-    planName: '',
-    quantity: '',
+    name: '',
+    slug: '',
+    category: 'views',
+    originalPrice: '',
+    discount: 0,
     price: '',
+    quantity: '',
     deliveryTime: '',
+    startTime: '',
+    retentionRate: '',
+    description: '',
     features: [],
+    tier: 'basic',
     isPopular: false,
     isActive: true
   })
@@ -33,8 +48,8 @@ const Pricing = () => {
         api.get('/pricing'),
         api.get('/services')
       ])
-      setPricingPlans(pricingRes.data.data.pricingPlans)
-      setServices(servicesRes.data.data.services)
+      setPricingPlans(pricingRes.data.data.plans || [])
+      setServices(servicesRes.data.data.services || [])
     } catch (error) {
       toast.error('Failed to fetch data')
     } finally {
@@ -76,13 +91,36 @@ const Pricing = () => {
     }
   }
 
+  const handleEditPrice = (plan) => {
+    setEditingPrice(plan)
+    setPriceFormData({
+      originalPrice: plan.originalPrice || '',
+      discount: plan.discount || 0,
+      price: plan.price || ''
+    })
+    setShowPriceModal(true)
+  }
+
+  const handleUpdatePrice = async (e) => {
+    e.preventDefault()
+    try {
+      await api.patch(`/pricing/${editingPrice.id}/prices`, priceFormData)
+      toast.success('Prices updated successfully')
+      fetchData()
+      setShowPriceModal(false)
+      setEditingPrice(null)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update prices')
+    }
+  }
+
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingPlan(null)
-    setFormData({ serviceId: '', planName: '', quantity: '', price: '', deliveryTime: '', features: [], isPopular: false, isActive: true })
+    setFormData({ serviceId: '', name: '', slug: '', category: 'views', originalPrice: '', discount: 0, price: '', quantity: '', deliveryTime: '', startTime: '', retentionRate: '', description: '', features: [], tier: 'basic', isPopular: false, isActive: true })
   }
 
-  const filteredPlans = pricingPlans.filter(plan => plan.planName?.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredPlans = pricingPlans.filter(plan => plan.name?.toLowerCase().includes(searchTerm.toLowerCase()))
 
   if (loading) return <div className="flex items-center justify-center min-h-[400px]"><FaSpinner className="animate-spin text-4xl text-red-600" /></div>
 
@@ -111,23 +149,37 @@ const Pricing = () => {
             <motion.div key={plan.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border rounded-xl p-6 hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-xl font-bold">{plan.planName}</h3>
-                  <p className="text-sm text-gray-600">{plan.service?.name}</p>
+                  <h3 className="text-xl font-bold">{plan.name}</h3>
+                  <p className="text-sm text-gray-600">{plan.category}</p>
+                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">{plan.tier}</span>
                 </div>
                 {plan.isPopular && <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">Popular</span>}
               </div>
               <div className="mb-4">
-                <div className="text-3xl font-bold text-red-600 flex items-center"><FaRupeeSign className="text-2xl" />{parseFloat(plan.price).toFixed(2)}</div>
-                <p className="text-gray-600">{plan.quantity}</p>
+                <div className="space-y-1">
+                  {plan.originalPrice && plan.discount > 0 && (
+                    <div className="text-sm text-gray-500">
+                      <span className="line-through">₹{parseFloat(plan.originalPrice).toFixed(2)}</span>
+                      <span className="ml-2 text-green-600 font-semibold">{plan.discount}% OFF</span>
+                    </div>
+                  )}
+                  <div className="text-3xl font-bold text-red-600 flex items-center"><FaRupeeSign className="text-2xl" />{parseFloat(plan.price).toFixed(2)}</div>
+                </div>
+                <p className="text-gray-600 mt-2">{plan.quantity}</p>
                 <p className="text-sm text-gray-500">{plan.deliveryTime}</p>
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => handleEdit(plan)} className="flex-1 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
-                  <FaEdit className="inline" /> Edit
+              <div className="space-y-2">
+                <button onClick={() => handleEditPrice(plan)} className="w-full py-2 text-green-600 bg-green-50 rounded-lg hover:bg-green-100 font-semibold">
+                  <FaRupeeSign className="inline" /> Edit Prices
                 </button>
-                <button onClick={() => handleDelete(plan.id)} className="flex-1 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
-                  <FaTrash className="inline" /> Delete
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEdit(plan)} className="flex-1 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100">
+                    <FaEdit className="inline" /> Edit
+                  </button>
+                  <button onClick={() => handleDelete(plan.id)} className="flex-1 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100">
+                    <FaTrash className="inline" /> Delete
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}
@@ -179,6 +231,65 @@ const Pricing = () => {
               <div className="flex gap-4 pt-4">
                 <button type="submit" className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700">Save</button>
                 <button type="button" onClick={handleCloseModal} className="flex-1 bg-gray-200 py-3 rounded-lg hover:bg-gray-300">Cancel</button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Quick Price Update Modal */}
+      {showPriceModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="bg-white rounded-xl max-w-md w-full p-6">
+            <h3 className="text-2xl font-bold mb-4">Update Prices</h3>
+            <p className="text-gray-600 mb-4">Plan: <span className="font-semibold">{editingPrice?.name}</span></p>
+            <form onSubmit={handleUpdatePrice} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Original Price (₹)</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={priceFormData.originalPrice} 
+                  onChange={(e) => setPriceFormData({...priceFormData, originalPrice: e.target.value})} 
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
+                  placeholder="Enter original price"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Discount (%)</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={priceFormData.discount} 
+                  onChange={(e) => setPriceFormData({...priceFormData, discount: e.target.value})} 
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
+                  placeholder="0-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Final Price (₹)</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  value={priceFormData.price} 
+                  onChange={(e) => setPriceFormData({...priceFormData, price: e.target.value})} 
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500"
+                  placeholder="Enter final price"
+                />
+              </div>
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> You can update any combination of these fields. Leave blank to keep existing value.
+                </p>
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button type="submit" className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold">
+                  Update Prices
+                </button>
+                <button type="button" onClick={() => setShowPriceModal(false)} className="flex-1 bg-gray-200 py-3 rounded-lg hover:bg-gray-300">
+                  Cancel
+                </button>
               </div>
             </form>
           </motion.div>

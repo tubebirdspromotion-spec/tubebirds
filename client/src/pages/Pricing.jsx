@@ -10,6 +10,7 @@ import {
   FaThumbsUp, FaGem, FaMedal, FaAward
 } from 'react-icons/fa'
 import toast from 'react-hot-toast'
+import api from '../services/api'
 
 const Pricing = () => {
   const navigate = useNavigate()
@@ -19,9 +20,118 @@ const Pricing = () => {
   const [selectedCategory, setSelectedCategory] = useState('views')
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [pricingPlans, setPricingPlans] = useState({})
+  const [loading, setLoading] = useState(true)
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], [0, -50])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+
+  // Fetch pricing plans from API
+  useEffect(() => {
+    fetchPricingPlans()
+  }, [])
+
+  const getIconForTier = (tier) => {
+    const icons = {
+      starter: <FaRocket className="text-4xl" />,
+      basic: <FaRocket className="text-4xl" />,
+      growth: <FaChartLine className="text-4xl" />,
+      pro: <FaTrophy className="text-4xl" />,
+      elite: <FaCrown className="text-4xl" />,
+      premium: <FaGem className="text-4xl" />,
+      ultimate: <FaFireAlt className="text-4xl" />
+    }
+    return icons[tier] || <FaRocket className="text-4xl" />
+  }
+
+  const getGradientForTier = (tier, category) => {
+    const gradients = {
+      starter: 'from-blue-500 to-blue-600',
+      basic: 'from-green-500 to-green-600',
+      growth: 'from-green-500 to-green-600',
+      pro: 'from-purple-500 to-purple-600',
+      elite: 'from-orange-500 to-red-600',
+      premium: 'from-pink-500 to-rose-600',
+      ultimate: 'from-yellow-500 to-amber-600'
+    }
+    return gradients[tier] || 'from-blue-500 to-blue-600'
+  }
+
+  const getBadgeForTier = (tier, isPopular) => {
+    if (isPopular) return 'POPULAR CHOICE'
+    
+    const badges = {
+      starter: 'BEST FOR BEGINNERS',
+      basic: 'QUICK START',
+      growth: 'GREAT VALUE',
+      pro: 'BEST VALUE',
+      elite: 'MOST POWERFUL',
+      premium: 'TRENDING MAKER',
+      ultimate: 'LEGEND STATUS'
+    }
+    return badges[tier] || tier?.toUpperCase() || 'PLAN'
+  }
+
+  const fetchPricingPlans = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/pricing')
+      const plans = response.data.data.plans
+      
+      // Group plans by category
+      const groupedPlans = {
+        views: { 
+          title: 'YouTube Views Plans', 
+          description: 'Boost your video visibility with real, organic YouTube views from genuine users. Our view packages help increase your video\'s reach, improve search rankings, and attract more organic traffic to your content.',
+          plans: [] 
+        },
+        subscribers: { 
+          title: 'YouTube Subscribers Plans', 
+          description: 'Grow your YouTube family with real, engaged subscribers who genuinely love your content. Our subscriber packages help you build a loyal community, increase channel authority, and meet monetization requirements faster.',
+          plans: [] 
+        },
+        monetization: { 
+          title: 'YouTube Monetization Plans', 
+          description: 'Fast-track your YouTube monetization journey! Our comprehensive packages help you meet YouTube\'s Partner Program requirements with genuine watch hours and subscribers, getting you eligible for ad revenue quickly and safely.',
+          plans: [] 
+        },
+        revenue: { 
+          title: 'YouTube Revenue Plans', 
+          description: 'Generate real AdSense revenue with our proven revenue packages! These plans deliver targeted views from high-CPM countries with maximum ad engagement, helping you earn actual money while growing your channel organically.',
+          plans: [] 
+        }
+      }
+      
+      plans.forEach(plan => {
+        if (groupedPlans[plan.category]) {
+          groupedPlans[plan.category].plans.push({
+            id: plan.id,
+            name: plan.name,
+            badge: getBadgeForTier(plan.tier, plan.isPopular),
+            icon: getIconForTier(plan.tier),
+            quantity: plan.quantity,
+            price: parseFloat(plan.price),
+            originalPrice: parseFloat(plan.originalPrice),
+            discount: plan.discount,
+            popular: plan.isPopular,
+            gradient: getGradientForTier(plan.tier, plan.category),
+            features: plan.features ? JSON.parse(plan.features) : [],
+            details: plan.description || '',
+            deliveryTime: plan.deliveryTime,
+            startTime: plan.startTime,
+            retentionRate: plan.retentionRate
+          })
+        }
+      })
+      
+      setPricingPlans(groupedPlans)
+    } catch (error) {
+      console.error('Failed to fetch pricing:', error)
+      toast.error('Failed to load pricing plans')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Update selectedCategory based on URL parameter
   useEffect(() => {
@@ -62,547 +172,7 @@ const Pricing = () => {
     { id: 'revenue', name: 'Revenue Plans', icon: <FaChartLine /> }
   ]
 
-  const pricingPlans = {
-    views: {
-      title: "YouTube Views Plans",
-      description: "Boost your video visibility with real, organic YouTube views from genuine users. Our view packages help increase your video's reach, improve search rankings, and attract more organic traffic to your content.",
-      plans: [
-        {
-          id: 'views-1',
-          name: 'Starter Views',
-          badge: 'BEST FOR BEGINNERS',
-          icon: <FaRocket className="text-4xl" />,
-          quantity: '5,000+ Views',
-          price: 750,
-          originalPrice: 1500,
-          discount: 50,
-          popular: false,
-          gradient: 'from-blue-500 to-blue-600',
-          features: [
-            '5,000+ Real YouTube Views',
-            '100% Safe & Organic',
-            'Gradual Delivery (Natural Growth)',
-            'Start Time: 12-24 Hours',
-            'Completion: 5-7 Days',
-            '24/7 Customer Support'
-          ],
-          details: 'Perfect for new creators looking to give their videos an initial boost. Our Starter Views package delivers 5,000+ genuine views from real users, helping your content gain initial traction and appear more credible to new viewers.'
-        },
-        {
-          id: 'views-2',
-          name: 'Growth Booster',
-          badge: 'POPULAR CHOICE',
-          icon: <FaChartLine className="text-4xl" />,
-          quantity: '10,000+ Views',
-          price: 1500,
-          originalPrice: 3000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-green-500 to-green-600',
-          features: [
-            '10,000+ Real YouTube Views',
-            '100% Safe & Organic',
-            'Natural Delivery Pattern',
-            'Boost Search Rankings',
-            'Start Time: 6-12 Hours',
-            'Completion: 7-10 Days',
-            'Priority Support'
-          ],
-          details: 'Our most popular package! Ideal for growing channels that want to increase visibility and credibility. 10,000 views significantly boost your video\'s performance in YouTube\'s algorithm.'
-        },
-        {
-          id: 'views-3',
-          name: 'Pro Package',
-          badge: 'GREAT VALUE',
-          icon: <FaTrophy className="text-4xl" />,
-          quantity: '20,000+ Views',
-          price: 2600,
-          originalPrice: 5200,
-          discount: 50,
-          popular: false,
-          gradient: 'from-purple-500 to-purple-600',
-          features: [
-            '20,000+ Real YouTube Views',
-            'Premium Quality Views',
-            'Faster Delivery',
-            'Improved Channel Authority',
-            'Start Time: 3-6 Hours',
-            'Completion: 10-14 Days',
-            'Dedicated Account Manager'
-          ],
-          details: 'Take your content to the next level with 20,000+ premium views. Perfect for established creators looking to accelerate growth and dominate their niche.'
-        },
-        {
-          id: 'views-4',
-          name: 'Elite Package',
-          badge: 'MOST POWERFUL',
-          icon: <FaCrown className="text-4xl" />,
-          quantity: '50,000+ Views',
-          price: 5500,
-          originalPrice: 11000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-orange-500 to-red-600',
-          features: [
-            '50,000+ Real YouTube Views',
-            'Premium Elite Quality',
-            'Rapid Delivery',
-            'Viral Potential Boost',
-            'Start Time: 1-3 Hours',
-            'Completion: 14-20 Days'
-          ],
-          details: 'Our Elite package delivers massive visibility with 50,000+ high-quality views. Ideal for viral campaigns and channels serious about explosive growth.'
-        },
-        {
-          id: 'views-5',
-          name: 'Mega Viral',
-          badge: 'TRENDING MAKER',
-          icon: <FaFireAlt className="text-4xl" />,
-          quantity: '1 Lakh+ Views',
-          price: 10000,
-          originalPrice: 20000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-pink-500 to-rose-600',
-          features: [
-            '1,00,000+ Real YouTube Views',
-            'Ultra Premium Quality',
-            'Lightning Fast Delivery',
-            'Algorithm Optimization',
-            'Start Time: Instant',
-            'Completion: 20-30 Days'
-          ],
-          details: 'Go viral with 1 lakh+ views! This package is designed to make your video trend and reach millions of potential viewers organically.'
-        },
-        {
-          id: 'views-6',
-          name: 'Ultimate Domination',
-          badge: 'LEGEND STATUS',
-          icon: <FaGem className="text-4xl" />,
-          quantity: '10 Lakh+ Views',
-          price: 80000,
-          originalPrice: 160000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-yellow-500 to-amber-600',
-          features: [
-            '10,00,000+ Real YouTube Views',
-            'Absolute Premium Quality',
-            'Maximum Speed Delivery',
-            'Complete Channel Transformation',
-            'Celebrity-Level Reach',
-            'White-Glove Service & Support'
-          ],
-          details: 'The ultimate package for serious creators and businesses. 10 lakh+ views transforms your channel into a major authority in your niche with massive organic reach.'
-        }
-      ]
-    },
-    subscribers: {
-      title: "YouTube Subscribers Plans",
-      description: "Grow your YouTube family with real, engaged subscribers who genuinely love your content. Our subscriber packages help you build a loyal community, increase channel authority, and meet monetization requirements faster.",
-      plans: [
-        {
-          id: 'subs-1',
-          name: 'Bronze Community',
-          badge: 'STARTER PACK',
-          icon: <FaUsers className="text-4xl" />,
-          quantity: '100 Subscribers',
-          price: 500,
-          originalPrice: 1000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-amber-600 to-amber-700',
-          features: [
-            '100 Real YouTube Subscribers',
-            '100% Safe & Permanent',
-            'Active & Engaged Users',
-            'No Password Required',
-            'Natural Growth Pattern',
-            'Start Time: 12-24 Hours',
-            'Completion: 3-5 Days',
-            'Lifetime Guarantee'
-          ],
-          details: 'Start building your YouTube community with 100 genuine subscribers. Perfect for new channels looking to establish credibility and social proof.'
-        },
-        {
-          id: 'subs-2',
-          name: 'Silver Community',
-          badge: 'POPULAR',
-          icon: <FaMedal className="text-4xl" />,
-          quantity: '200 Subscribers',
-          price: 1000,
-          originalPrice: 2000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-gray-400 to-gray-600',
-          features: [
-            '200 Real YouTube Subscribers',
-            'High-Quality Active Users',
-            'Permanent & Safe',
-            'Engagement Boost',
-            'Channel Authority Increase',
-            'Start Time: 6-12 Hours',
-            'Completion: 5-7 Days',
-            'Priority Support'
-          ],
-          details: 'Double your credibility with 200 engaged subscribers. This package gives your channel the momentum needed to attract organic subscribers.'
-        },
-        {
-          id: 'subs-3',
-          name: 'Gold Community',
-          badge: 'BEST VALUE',
-          icon: <FaGem className="text-4xl" />,
-          quantity: '500 Subscribers',
-          price: 2000,
-          originalPrice: 4000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-yellow-500 to-yellow-600',
-          features: [
-            '500 Real YouTube Subscribers',
-            'Premium Quality Members',
-            'High Engagement Rate',
-            'Permanent & Guaranteed',
-            'Significant Authority Boost',
-            'Start Time: 3-6 Hours',
-            'Completion: 7-10 Days',
-            'Dedicated Support'
-          ],
-          details: 'Reach the 500 subscriber milestone! This package significantly boosts your channel\'s credibility and helps unlock YouTube features faster.'
-        },
-        {
-          id: 'subs-4',
-          name: 'Platinum Community',
-          badge: 'MONETIZATION READY',
-          icon: <FaCrown className="text-4xl" />,
-          quantity: '1,000 Subscribers',
-          price: 4000,
-          originalPrice: 8000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-cyan-500 to-blue-600',
-          features: [
-            '1,000 Real YouTube Subscribers',
-            'Monetization Milestone!',
-            'Premium Engaged Members',
-            'Permanent & Safe',
-            'Maximum Channel Credibility',
-            'Start Time: 1-3 Hours',
-            'Completion: 10-15 Days',
-            'VIP Support'
-          ],
-          details: 'Hit the crucial 1K subscriber mark! This package brings you to YouTube\'s monetization threshold with genuine, engaged subscribers.'
-        },
-        {
-          id: 'subs-5',
-          name: 'Diamond Elite',
-          badge: 'AUTHORITY BUILDER',
-          icon: <FaGem className="text-4xl" />,
-          quantity: '5,000 Subscribers',
-          price: 18000,
-          originalPrice: 36000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-purple-500 to-indigo-600',
-          features: [
-            '5,000 Real YouTube Subscribers',
-            'Elite Quality Community',
-            'Massive Authority Boost',
-            'Permanent & Guaranteed',
-            'Influencer Status',
-            'Premium Engagement',
-            'Start Time: Instant',
-            'Completion: 15-25 Days'
-          ],
-          details: 'Join the influencer league with 5,000 subscribers! This package establishes you as a serious authority in your niche.'
-        },
-        {
-          id: 'subs-6',
-          name: 'Ultimate Legend',
-          badge: 'CELEBRITY STATUS',
-          icon: <FaFireAlt className="text-4xl" />,
-          quantity: '10,000 Subscribers',
-          price: 35000,
-          originalPrice: 70000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-red-500 to-pink-600',
-          features: [
-            '10,000 Real YouTube Subscribers',
-            'Celebrity-Level Community',
-            'Maximum Authority & Influence',
-            'Premium Engagement Guaranteed',
-            'Industry Leader Status',
-            'Full Channel Transformation',
-            'Start Time: Instant',
-            'Completion: 25-40 Days'
-          ],
-          details: 'Achieve celebrity status with 10,000 subscribers! This package transforms your channel into a major player in your industry.'
-        }
-      ]
-    },
-    monetization: {
-      title: "YouTube Monetization Plans",
-      description: "Fast-track your YouTube monetization journey! Our comprehensive packages help you meet YouTube's Partner Program requirements with genuine watch hours and subscribers, getting you eligible for ad revenue quickly and safely.",
-      plans: [
-        {
-          id: 'mon-1',
-          name: 'Starter Boost',
-          badge: 'QUICK START',
-          icon: <FaRocket className="text-4xl" />,
-          quantity: '200 Hours + 25-30K Views',
-          price: 2000,
-          originalPrice: 4000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-green-500 to-green-600',
-          features: [
-            '200 Watch Hours Guaranteed',
-            '25,000-30,000 Real Views',
-            '100% Safe & Organic',
-            'Natural Watch Pattern',
-            'Progress Towards Monetization',
-            'Start Time: 24 Hours',
-            'Completion: 10-15 Days'
-          ],
-          details: 'Begin your monetization journey! This package provides 200 watch hours with 25-30K views, giving you a solid foundation towards YouTube Partner Program eligibility.'
-        },
-        {
-          id: 'mon-2',
-          name: 'Growth Accelerator',
-          badge: 'POPULAR',
-          icon: <FaChartLine className="text-4xl" />,
-          quantity: '500 Hours + 70-80K Views',
-          price: 4500,
-          originalPrice: 9000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-blue-500 to-blue-600',
-          features: [
-            '500 Watch Hours Guaranteed',
-            '70,000-80,000 Real Views',
-            'Premium Quality Views',
-            'Faster Path to Monetization',
-            'Algorithm-Friendly Growth',
-            'Start Time: 12 Hours',
-            'Completion: 15-20 Days'
-          ],
-          details: 'Accelerate your growth! 500 hours with 70-80K views puts you halfway to monetization requirements with premium quality engagement.'
-        },
-        {
-          id: 'mon-3',
-          name: 'Pro Monetization',
-          badge: 'BEST VALUE',
-          icon: <FaMoneyBillWave className="text-4xl" />,
-          quantity: '1,000 Hours + 1.2-1.5L Views + 250 Subs',
-          price: 8500,
-          originalPrice: 17000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-purple-500 to-purple-600',
-          features: [
-            '1,000 Watch Hours (Full Requirement!)',
-            '1.2-1.5 Lakh Real Views',
-            '250 Real Subscribers',
-            'Complete Monetization Package',
-            'Premium Quality Engagement',
-            'Start Time: 6 Hours',
-            'Completion: 20-30 Days'
-          ],
-          details: 'Complete monetization solution! This package fulfills the entire 1,000-hour requirement plus adds 250 subscribers and up to 1.5 lakh views for maximum impact.'
-        },
-        {
-          id: 'mon-4',
-          name: 'Elite Monetization',
-          badge: 'DOUBLE POWER',
-          icon: <FaCrown className="text-4xl" />,
-          quantity: '2,000 Hours + 2.5-3L Views + 500 Subs',
-          price: 16000,
-          originalPrice: 32000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-orange-500 to-red-600',
-          features: [
-            '2,000 Watch Hours (2x Requirement!)',
-            '2.5-3 Lakh Real Views',
-            '500 Real Subscribers',
-            'Premium Elite Package',
-            'Rapid Channel Growth',
-            'Start Time: 3 Hours',
-            'Completion: 25-35 Days'
-          ],
-          details: 'Go beyond requirements! Double the watch hours (2,000) plus 2.5-3 lakh views and 500 subscribers ensures you stay monetized with room for fluctuation.'
-        },
-        {
-          id: 'mon-5',
-          name: 'Premium Authority',
-          badge: 'TRIPLE POWER',
-          icon: <FaTrophy className="text-4xl" />,
-          quantity: '3,000 Hours + 3.75-4.5L Views + 750 Subs',
-          price: 23000,
-          originalPrice: 46000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-pink-500 to-rose-600',
-          features: [
-            '3,000 Watch Hours (3x Requirement!)',
-            '3.75-4.5 Lakh Real Views',
-            '750 Real Subscribers',
-            'Authority-Building Package',
-            'Massive Channel Boost',
-            'Start Time: 1 Hour',
-            'Completion: 30-40 Days'
-          ],
-          details: 'Build serious authority! Triple the requirements with 3,000 hours, up to 4.5 lakh views, and 750 subscribers for a dominant channel presence.'
-        },
-        {
-          id: 'mon-6',
-          name: 'Ultimate Domination',
-          badge: 'MAXIMUM IMPACT',
-          icon: <FaGem className="text-4xl" />,
-          quantity: '4,000 Hours + 5-6L Views + 1,000 Subs',
-          price: 30000,
-          originalPrice: 60000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-yellow-500 to-amber-600',
-          features: [
-            '4,000 Watch Hours (4x Requirement!)',
-            '5-6 Lakh Real Views',
-            '1,000 Real Subscribers (Monetization Ready!)',
-            'Ultimate Growth Package',
-            'Complete Channel Transformation',
-            'Start Time: Instant',
-            'Completion: 35-50 Days'
-          ],
-          details: 'The ultimate monetization package! Quadruple the watch hour requirement with 5-6 lakh views and hit the 1K subscriber milestone simultaneously.'
-        }
-      ]
-    },
-    revenue: {
-      title: "YouTube Revenue Plans",
-      description: "Generate real AdSense revenue with our proven revenue packages! These plans deliver targeted views from high-CPM countries with maximum ad engagement, helping you earn actual money while growing your channel organically.",
-      plans: [
-        {
-          id: 'rev-1',
-          name: 'Revenue Starter',
-          badge: 'FIRST EARNINGS',
-          icon: <FaMoneyBillWave className="text-4xl" />,
-          quantity: '8K-12K Views = $8-$12 Revenue',
-          price: 1600,
-          originalPrice: 3200,
-          discount: 50,
-          popular: false,
-          gradient: 'from-green-500 to-emerald-600',
-          features: [
-            '8,000-12,000 High-CPM Views',
-            'Expected Revenue: $8-$12',
-            '100% AdSense Safe',
-            'Tier 1 Country Traffic',
-            'High Ad Engagement',
-            'Real Revenue Generation',
-            'Start Time: 24 Hours',
-            'Completion: 7-10 Days'
-          ],
-          details: 'Start earning today! This package delivers 8-12K views from high-CPM countries, generating $8-$12 in real AdSense revenue for your channel.'
-        },
-        {
-          id: 'rev-2',
-          name: 'Revenue Booster',
-          badge: 'POPULAR CHOICE',
-          icon: <FaChartLine className="text-4xl" />,
-          quantity: '17K-25K Views = $17-$25 Revenue',
-          price: 3200,
-          originalPrice: 6400,
-          discount: 50,
-          popular: true,
-          gradient: 'from-blue-500 to-cyan-600',
-          features: [
-            '17,000-25,000 High-CPM Views',
-            'Expected Revenue: $17-$25',
-            'Premium Tier 1 Traffic',
-            'Maximum Ad Visibility',
-            'High Click-Through Rate',
-            'Proven Revenue Results',
-            'Start Time: 12 Hours',
-            'Completion: 10-14 Days'
-          ],
-          details: 'Double your earnings! Get 17-25K premium views generating $17-$25 in revenue. Our most popular revenue package for consistent earnings.'
-        },
-        {
-          id: 'rev-3',
-          name: 'Revenue Pro',
-          badge: 'BEST VALUE',
-          icon: <FaTrophy className="text-4xl" />,
-          quantity: '35K-50K Views = $35-$50 Revenue',
-          price: 6400,
-          originalPrice: 12800,
-          discount: 50,
-          popular: true,
-          gradient: 'from-purple-500 to-violet-600',
-          features: [
-            '35,000-50,000 High-CPM Views',
-            'Expected Revenue: $35-$50',
-            'Elite Tier 1 Countries',
-            'Premium Ad Engagement',
-            'Multiple Revenue Streams',
-            'Optimized for Maximum Earnings',
-            'Start Time: 6 Hours',
-            'Completion: 14-20 Days'
-          ],
-          details: 'Professional revenue generation! 35-50K elite views from top-paying countries, delivering $35-$50 in AdSense earnings with high engagement.'
-        },
-        {
-          id: 'rev-4',
-          name: 'Revenue Elite',
-          badge: 'HIGH EARNER',
-          icon: <FaCrown className="text-4xl" />,
-          quantity: '70K-100K Views = $70-$100 Revenue',
-          price: 12000,
-          originalPrice: 24000,
-          discount: 50,
-          popular: true,
-          gradient: 'from-orange-500 to-red-600',
-          features: [
-            '70,000-1,00,000 High-CPM Views',
-            'Expected Revenue: $70-$100',
-            'Premium USA/UK/Canada Traffic',
-            'Maximum Revenue Optimization',
-            'Multi-Ad Format Engagement',
-            'Consistent High Earnings',
-            'Start Time: 3 Hours',
-            'Completion: 20-28 Days'
-          ],
-          details: 'Elite earnings package! 70-100K premium views generating $70-$100 in revenue. Perfect for serious creators looking for consistent income.'
-        },
-        {
-          id: 'rev-5',
-          name: 'Revenue Master',
-          badge: 'MAXIMUM PROFIT',
-          icon: <FaGem className="text-4xl" />,
-          quantity: '140K-2L Views = $140-$200 Revenue',
-          price: 23000,
-          originalPrice: 46000,
-          discount: 50,
-          popular: false,
-          gradient: 'from-yellow-500 to-amber-600',
-          features: [
-            '1,40,000-2,00,000 High-CPM Views',
-            'Expected Revenue: $140-$200',
-            'Ultra-Premium Traffic Sources',
-            'Maximum CPM Countries Only',
-            'All Ad Formats Optimized',
-            'Professional Revenue Stream',
-            'Start Time: Instant',
-            'Completion: 25-35 Days'
-          ],
-          details: 'Master-level earnings! 140K-2 lakh ultra-premium views generating $140-$200 in revenue. Transform your channel into a profitable business.'
-        }
-      ]
-    }
-  }
-
-  const currentPlans = pricingPlans[selectedCategory]
+  const currentPlans = pricingPlans[selectedCategory] || { title: '', description: '', plans: [] }
 
   const getCategoryIcon = (category) => {
     switch(category) {
@@ -664,6 +234,17 @@ const Pricing = () => {
     whileInView: { opacity: 1, y: 0 },
     viewport: { once: true },
     transition: { duration: 0.6 }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading pricing plans...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
