@@ -126,3 +126,71 @@ export const deletePricingPlan = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Update pricing plan prices (Admin only)
+// @route   PATCH /api/pricing/:id/prices
+// @access  Private/Admin
+export const updatePricingPrices = async (req, res, next) => {
+  try {
+    const { originalPrice, discount, price } = req.body;
+
+    // Validate at least one price field is provided
+    if (originalPrice === undefined && discount === undefined && price === undefined) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide at least one price field (originalPrice, discount, or price)'
+      });
+    }
+
+    // Find the plan
+    const plan = await Pricing.findByPk(req.params.id);
+
+    if (!plan) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Pricing plan not found'
+      });
+    }
+
+    // Build update object
+    const updates = {};
+    if (originalPrice !== undefined) {
+      updates.originalPrice = originalPrice;
+    }
+    if (discount !== undefined) {
+      // Validate discount is 0-100
+      if (discount < 0 || discount > 100) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Discount must be between 0 and 100'
+        });
+      }
+      updates.discount = discount;
+    }
+    if (price !== undefined) {
+      updates.price = price;
+    }
+
+    // Update the plan
+    await plan.update(updates);
+
+    // Log the price change for audit
+    console.log(`[ADMIN PRICE UPDATE] Admin ID: ${req.user.id} | Plan: ${plan.name} (ID: ${plan.id}) | Updates:`, updates);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Pricing updated successfully',
+      data: { 
+        plan: {
+          id: plan.id,
+          name: plan.name,
+          originalPrice: plan.originalPrice,
+          discount: plan.discount,
+          price: plan.price
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

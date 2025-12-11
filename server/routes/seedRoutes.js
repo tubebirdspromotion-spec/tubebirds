@@ -3,10 +3,14 @@ import User from '../models/User.js';
 import Service from '../models/Service.js';
 import Pricing from '../models/Pricing.js';
 import Portfolio from '../models/Portfolio.js';
+import { migratePricingTable } from '../controllers/seedController.js';
 import { protect, authorize } from '../middleware/auth.js';
 import '../models/index.js'; // Load model associations
 
 const router = express.Router();
+
+// Pricing migration endpoint - call this via Postman
+router.post('/pricing-migration', protect, authorize('admin'), migratePricingTable);
 
 // @desc    Run database migrations (Update schema without data loss)
 // @route   POST /api/seed/migrate

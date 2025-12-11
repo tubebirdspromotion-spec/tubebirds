@@ -23,80 +23,67 @@ export const createRazorpayOrder = async (req, res, next) => {
       });
     }
 
-    const { pricingId, videoUrl, channelName, channelUrl, planDetails } = req.body;
+    const { pricingId, videoUrl, channelName, channelUrl } = req.body;
 
-    // Debug logging
-    console.log('🔍 Request body:', { pricingId, videoUrl, channelName, channelUrl, planDetails });
-
-    // Validate required fields
-    if ((!pricingId && !planDetails) || !videoUrl) {
+    // Security: ALWAYS require pricingId - NEVER accept price from client
+    if (!pricingId) {
+      console.warn('⚠️ Security: Order creation attempted without pricingId', {
+        userId: req.user.id,
+        ip: req.ip
+      });
       return res.status(400).json({
         status: 'error',
-        message: 'Pricing plan and YouTube video URL are required'
+        message: 'Invalid request. Please select a pricing plan and try again.'
       });
     }
 
     // Validate YouTube URL
-    if (!razorpayService.validateYouTubeUrl(videoUrl)) {
+    if (!videoUrl || !razorpayService.validateYouTubeUrl(videoUrl)) {
       return res.status(400).json({
         status: 'error',
         message: 'Please provide a valid YouTube video URL (e.g., https://youtube.com/watch?v=xxxxx)'
       });
     }
 
-    let pricing;
-    let serviceId;
-    
-    // Try to get pricing from database first
-    if (pricingId) {
-      pricing = await Pricing.findByPk(pricingId, {
-        include: [{
-          model: Service,
-          as: 'service'
-        }]
+    // Fetch pricing from database - THIS IS THE ONLY SOURCE OF TRUTH FOR PRICE
+    const pricing = await Pricing.findByPk(pricingId, {
+      include: [{
+        model: Service,
+        as: 'service'
+      }]
+    });
+
+    // Validate pricing exists and is active
+    if (!pricing) {
+      console.warn('⚠️ Security: Invalid pricingId attempted', {
+        pricingId,
+        userId: req.user.id
       });
-      serviceId = pricing?.serviceId;
-    }
-
-    // If not found and planDetails provided, use planDetails
-    if (!pricing && planDetails) {
-      // Map category to service slug
-      const categoryServiceSlugMap = {
-        'views': 'youtube-views',
-        'subscribers': 'youtube-subscribers',
-        'monetization': 'youtube-monetization',
-        'revenue': 'youtube-revenue'
-      };
-      
-      const serviceSlug = categoryServiceSlugMap[planDetails.category] || 'youtube-views';
-      
-      // Find service by slug (more reliable than ID)
-      const service = await Service.findOne({ where: { slug: serviceSlug } });
-      
-      if (!service) {
-        return res.status(500).json({
-          status: 'error',
-          message: 'Service not found. Please contact support or run database sync.'
-        });
-      }
-      
-      serviceId = service.id;
-      
-      pricing = {
-        price: parseFloat(planDetails.price),
-        quantity: planDetails.quantity || planDetails.views || '0',
-        planName: planDetails.name,
-        serviceId: serviceId,
-        service: service
-      };
-    }
-
-    if (!pricing || !pricing.price) {
       return res.status(404).json({
         status: 'error',
-        message: 'Pricing plan not found'
+        message: 'Pricing plan not found.'
       });
     }
+
+    if (!pricing.isActive) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'This pricing plan is no longer available.'
+      });
+    }
+
+    const serviceId = pricing.serviceId;
+
+    // Security audit log
+    console.log('💳 Payment order initiated:', {
+      userId: req.user.id,
+      userEmail: req.user.email,
+      pricingId: pricing.id,
+      planName: pricing.name,
+      price: pricing.price,
+      videoUrl: videoUrl.substring(0, 50),
+      timestamp: new Date().toISOString()
+    });
 
     // Calculate GST (18%)
     const gstCalculation = razorpayService.calculateGST(pricing.price, 18);
@@ -364,7 +351,8 @@ export const verifyPayment = async (req, res, next) => {
 export const handleWebhook = async (req, res, next) => {
   try {
     const webhookSignature = req.headers['x-razorpay-signature'];
-    const webhookBody = JSON.stringify(req.body);
+    // Convert raw body buffer to string for signature verification
+    const webhookBody = req.body.toString();
 
     // Verify webhook signature
     const isValid = razorpayService.verifyWebhookSignature(webhookBody, webhookSignature);

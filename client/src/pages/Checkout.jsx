@@ -188,15 +188,16 @@ const Checkout = () => {
     try {
       console.log('💳 Creating payment order with plan:', plan)
       
+      // Security: Validate pricingId exists before sending
+      if (!plan.id || typeof plan.id !== 'number') {
+        toast.error('Invalid pricing plan. Please go back and select a valid plan.')
+        setIsSubmitting(false)
+        return
+      }
+      
       // Create Razorpay order on server
       const response = await api.post('/payment/create-order', {
-        pricingId: typeof plan.id === 'number' ? plan.id : null, // Only send if numeric DB ID
-        planDetails: {
-          name: plan.name,
-          price: parseFloat(plan.price),
-          quantity: plan.quantity || plan.views,
-          category: plan.category
-        },
+        pricingId: plan.id, // Always send valid database ID
         videoUrl: formData.videoUrl,
         channelName: formData.channelName || '',
         channelUrl: formData.channelUrl || ''
