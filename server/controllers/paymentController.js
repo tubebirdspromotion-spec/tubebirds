@@ -145,8 +145,9 @@ export const createRazorpayOrder = async (req, res, next) => {
       timestamp: new Date().toISOString()
     });
 
-    // Calculate GST (18%)
-    const gstCalculation = razorpayService.calculateGST(pricing.price, 18);
+    // Calculate GST (18%) - Ensure price is converted to number
+    const basePrice = parseFloat(pricing.price);
+    const gstCalculation = razorpayService.calculateGST(basePrice, 18);
 
     // Extract quantity from pricing.quantity string
     const targetQuantity = parseInt(String(pricing.quantity).replace(/[^0-9]/g, '')) || 0;

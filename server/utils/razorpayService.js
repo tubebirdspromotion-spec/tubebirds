@@ -264,12 +264,16 @@ class RazorpayService {
    * @returns {Object} GST breakdown
    */
   calculateGST(baseAmount, gstRate = 18) {
-    const gstAmount = (baseAmount * gstRate) / 100;
-    const totalAmount = baseAmount + gstAmount;
+    // Convert to number in case it's a string (from database DECIMAL type)
+    const baseAmountNum = parseFloat(baseAmount);
+    const gstRateNum = parseFloat(gstRate);
+    
+    const gstAmount = (baseAmountNum * gstRateNum) / 100;
+    const totalAmount = baseAmountNum + gstAmount;
 
     return {
-      baseAmount: parseFloat(baseAmount.toFixed(2)),
-      gstRate: parseFloat(gstRate.toFixed(2)),
+      baseAmount: parseFloat(baseAmountNum.toFixed(2)),
+      gstRate: parseFloat(gstRateNum.toFixed(2)),
       gstAmount: parseFloat(gstAmount.toFixed(2)),
       totalAmount: parseFloat(totalAmount.toFixed(2))
     };
