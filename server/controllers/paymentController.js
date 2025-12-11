@@ -5,11 +5,20 @@ import Pricing from '../models/Pricing.js';
 import Payment from '../models/Payment.js';
 import razorpayService from '../utils/razorpayService.js';
 import { sendPaymentReceipt, sendOrderConfirmation } from '../utils/emailService.js';
+import { Op } from 'sequelize';
+import validator from 'validator';
+import { sequelize } from '../config/db.js';
 
 /**
  * Payment Controller - Handles all payment operations
  * Following industry best practices for secure payment processing
  */
+
+// Helper function to sanitize user inputs
+const sanitizeInput = (input) => {
+  if (!input) return '';
+  return validator.escape(String(input).trim());
+};
 
 // @desc    Create Razorpay order for checkout
 // @route   POST /api/payment/create-order
@@ -42,6 +51,57 @@ export const createRazorpayOrder = async (req, res, next) => {
       return res.status(400).json({
         status: 'error',
         message: 'Please provide a valid YouTube video URL (e.g., https://youtube.com/watch?v=xxxxx)'
+      });
+    }
+
+    // Sanitize user inputs to prevent XSS
+    const sanitizedChannelName = sanitizeInput(channelName);
+    const sanitizedChannelUrl = channelUrl && validator.isURL(channelUrl) ? channelUrl : '';
+    const sanitizedVideoUrl = validator.isURL(videoUrl) ? videoUrl : '';
+
+    // Idempotency check: Look for recent duplicate order
+    const existingOrder = await Order.findOne({
+      where: {
+        userId: req.user.id,
+        pricingId: pricingId,
+        status: { [Op.in]: ['pending', 'processing'] },
+        createdAt: { [Op.gte]: new Date(Date.now() - 30 * 60 * 1000) } // Last 30 minutes
+      },
+      include: [{
+        model: Service,
+        as: 'service'
+      }]
+    });
+
+    if (existingOrder) {
+      console.log('🔄 Idempotency: Returning existing order', {
+        orderId: existingOrder.id,
+        userId: req.user.id
+      });
+
+      // Calculate GST for existing order
+      const pricing = await Pricing.findByPk(pricingId);
+      const gstCalculation = razorpayService.calculateGST(pricing.price, 18);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Returning existing pending order',
+        data: {
+          orderId: existingOrder.id,
+          orderNumber: existingOrder.orderNumber,
+          razorpayOrderId: existingOrder.paymentId,
+          razorpayKeyId: razorpayService.getKeyId(),
+          amount: gstCalculation.totalAmount,
+          baseAmount: gstCalculation.baseAmount,
+          gstAmount: gstCalculation.gstAmount,
+          gstRate: gstCalculation.gstRate,
+          currency: 'INR',
+          customerDetails: {
+            name: req.user.name,
+            email: req.user.email,
+            phone: req.user.phone || ''
+          }
+        }
       });
     }
 
@@ -81,7 +141,7 @@ export const createRazorpayOrder = async (req, res, next) => {
       pricingId: pricing.id,
       planName: pricing.name,
       price: pricing.price,
-      videoUrl: videoUrl.substring(0, 50),
+      videoUrl: sanitizedVideoUrl.substring(0, 50),
       timestamp: new Date().toISOString()
     });
 
@@ -92,7 +152,7 @@ export const createRazorpayOrder = async (req, res, next) => {
     const targetQuantity = parseInt(String(pricing.quantity).replace(/[^0-9]/g, '')) || 0;
 
     // Extract YouTube video ID
-    const videoId = razorpayService.extractYouTubeVideoId(videoUrl);
+    const videoId = razorpayService.extractYouTubeVideoId(sanitizedVideoUrl);
 
     // Generate order number
     const orderNumber = await Order.generateOrderNumber();
@@ -116,15 +176,15 @@ export const createRazorpayOrder = async (req, res, next) => {
         phone: req.user.phone || ''
       },
       channelDetails: {
-        channelName: channelName || '',
-        channelUrl: channelUrl || '',
-        videoUrl: videoUrl,
+        channelName: sanitizedChannelName,
+        channelUrl: sanitizedChannelUrl,
+        videoUrl: sanitizedVideoUrl,
         videoId: videoId
       },
       targetQuantity,
       estimatedCompletionDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
-      // Store plan details if no pricingId
-      planDetails: !pricingId ? planDetails : null
+      // Set payment timeout to 30 minutes
+      paymentExpiresAt: new Date(Date.now() + 30 * 60 * 1000)
     });
 
     // Create Razorpay order
@@ -194,6 +254,8 @@ export const createRazorpayOrder = async (req, res, next) => {
 // @route   POST /api/payment/verify
 // @access  Private
 export const verifyPayment = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  
   try {
     const {
       razorpay_order_id,
@@ -204,14 +266,17 @@ export const verifyPayment = async (req, res, next) => {
 
     // Validate required fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !orderId) {
+      await transaction.rollback();
       return res.status(400).json({
         status: 'error',
         message: 'Missing required payment verification parameters'
       });
     }
 
-    // Find the order
+    // Find the order with database lock to prevent race conditions
     const order = await Order.findByPk(orderId, {
+      lock: transaction.LOCK.UPDATE,
+      transaction,
       include: [
         { 
           model: User, 
@@ -224,6 +289,7 @@ export const verifyPayment = async (req, res, next) => {
     });
 
     if (!order) {
+      await transaction.rollback();
       return res.status(404).json({
         status: 'error',
         message: 'Order not found'
@@ -232,9 +298,29 @@ export const verifyPayment = async (req, res, next) => {
 
     // Verify user owns this order
     if (order.userId !== req.user.id) {
+      await transaction.rollback();
       return res.status(403).json({
         status: 'error',
         message: 'Not authorized to verify this payment'
+      });
+    }
+
+    // Check if payment already processed (idempotency)
+    if (order.paymentStatus === 'paid' || order.status === 'confirmed') {
+      await transaction.commit();
+      console.log('🔄 Idempotency: Payment already verified', {
+        orderId: order.id,
+        paymentId: razorpay_payment_id
+      });
+      
+      return res.status(200).json({
+        status: 'success',
+        message: 'Payment already verified',
+        data: {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          paymentId: razorpay_payment_id
+        }
       });
     }
 
@@ -250,7 +336,7 @@ export const verifyPayment = async (req, res, next) => {
       await order.update({
         paymentStatus: 'failed',
         status: 'cancelled'
-      });
+      }, { transaction });
 
       // Update payment record
       await Payment.update(
@@ -263,10 +349,12 @@ export const verifyPayment = async (req, res, next) => {
           where: {
             orderId: order.id,
             razorpayOrderId: razorpay_order_id
-          }
+          },
+          transaction
         }
       );
 
+      await transaction.commit();
       return res.status(400).json({
         status: 'error',
         message: 'Payment verification failed. Invalid signature.'
@@ -284,20 +372,21 @@ export const verifyPayment = async (req, res, next) => {
     // Generate invoice number
     const invoiceNumber = razorpayService.generateInvoiceNumber();
 
-    // Update order status
+    // Update order status within transaction
     await order.update({
       paymentStatus: 'paid',
       paymentId: razorpay_payment_id,
       status: 'processing',
       startDate: new Date()
-    });
+    }, { transaction });
 
-    // Update payment record
+    // Update payment record within transaction
     const payment = await Payment.findOne({
       where: {
         orderId: order.id,
         razorpayOrderId: razorpay_order_id
-      }
+      },
+      transaction
     });
 
     if (payment) {
@@ -314,10 +403,19 @@ export const verifyPayment = async (req, res, next) => {
           videoUrl: order.channelDetails?.videoUrl,
           videoId: order.channelDetails?.videoId
         }
-      });
+      }, { transaction });
     }
 
-    // Send confirmation emails
+    // Commit transaction before sending emails
+    await transaction.commit();
+
+    console.log('✅ Payment verified successfully:', {
+      orderId: order.id,
+      paymentId: razorpay_payment_id,
+      userId: req.user.id
+    });
+
+    // Send confirmation emails (outside transaction - non-critical)
     try {
       await sendPaymentReceipt(order, payment, order.customer);
       await sendOrderConfirmation(order, order.customer);
@@ -340,6 +438,10 @@ export const verifyPayment = async (req, res, next) => {
       }
     });
   } catch (error) {
+    // Rollback transaction on error
+    if (transaction) {
+      await transaction.rollback();
+    }
     console.error('❌ Payment verification error:', error);
     next(error);
   }

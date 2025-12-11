@@ -124,6 +124,156 @@ const Pricing = () => {
         }
       })
       
+      // Add fallback for subscribers if no plans found
+      if (groupedPlans.subscribers.plans.length === 0) {
+        groupedPlans.subscribers.plans = [
+          {
+            id: 'subs-1',
+            name: 'Bronze Community',
+            badge: 'STARTER PACK',
+            icon: <FaUsers className="text-4xl" />,
+            quantity: '100 Subscribers',
+            price: 500,
+            originalPrice: 1000,
+            discount: 50,
+            popular: false,
+            gradient: 'from-amber-600 to-amber-700',
+            features: [
+              '100 Real YouTube Subscribers',
+              '100% Safe & Permanent',
+              'Active & Engaged Users',
+              'No Password Required',
+              'Natural Growth Pattern',
+              'Start Time: 12-24 Hours',
+              'Completion: 3-5 Days',
+              'Lifetime Guarantee'
+            ],
+            details: 'Start building your YouTube community with 100 genuine subscribers. Perfect for new channels looking to establish credibility and social proof.',
+            unavailable: true
+          },
+          {
+            id: 'subs-2',
+            name: 'Silver Community',
+            badge: 'POPULAR',
+            icon: <FaMedal className="text-4xl" />,
+            quantity: '200 Subscribers',
+            price: 1000,
+            originalPrice: 2000,
+            discount: 50,
+            popular: true,
+            gradient: 'from-gray-400 to-gray-600',
+            features: [
+              '200 Real YouTube Subscribers',
+              'High-Quality Active Users',
+              'Permanent & Safe',
+              'Engagement Boost',
+              'Channel Authority Increase',
+              'Start Time: 6-12 Hours',
+              'Completion: 5-7 Days',
+              'Priority Support'
+            ],
+            details: 'Double your credibility with 200 engaged subscribers. This package gives your channel the momentum needed to attract organic subscribers.',
+            unavailable: true
+          },
+          {
+            id: 'subs-3',
+            name: 'Gold Community',
+            badge: 'BEST VALUE',
+            icon: <FaGem className="text-4xl" />,
+            quantity: '500 Subscribers',
+            price: 2000,
+            originalPrice: 4000,
+            discount: 50,
+            popular: true,
+            gradient: 'from-yellow-500 to-yellow-600',
+            features: [
+              '500 Real YouTube Subscribers',
+              'Premium Quality Members',
+              'High Engagement Rate',
+              'Permanent & Guaranteed',
+              'Significant Authority Boost',
+              'Start Time: 3-6 Hours',
+              'Completion: 7-10 Days',
+              'Dedicated Support'
+            ],
+            details: 'Reach the 500 subscriber milestone! This package significantly boosts your channel\'s credibility and helps unlock YouTube features faster.',
+            unavailable: true
+          },
+          {
+            id: 'subs-4',
+            name: 'Platinum Community',
+            badge: 'MONETIZATION READY',
+            icon: <FaCrown className="text-4xl" />,
+            quantity: '1,000 Subscribers',
+            price: 4000,
+            originalPrice: 8000,
+            discount: 50,
+            popular: true,
+            gradient: 'from-cyan-500 to-blue-600',
+            features: [
+              '1,000 Real YouTube Subscribers',
+              'Monetization Milestone!',
+              'Premium Engaged Members',
+              'Permanent & Safe',
+              'Maximum Channel Credibility',
+              'Start Time: 1-3 Hours',
+              'Completion: 10-15 Days',
+              'VIP Support'
+            ],
+            details: 'Hit the crucial 1K subscriber mark! This package brings you to YouTube\'s monetization threshold with genuine, engaged subscribers.',
+            unavailable: true
+          },
+          {
+            id: 'subs-5',
+            name: 'Diamond Elite',
+            badge: 'AUTHORITY BUILDER',
+            icon: <FaGem className="text-4xl" />,
+            quantity: '5,000 Subscribers',
+            price: 18000,
+            originalPrice: 36000,
+            discount: 50,
+            popular: false,
+            gradient: 'from-purple-500 to-indigo-600',
+            features: [
+              '5,000 Real YouTube Subscribers',
+              'Elite Quality Community',
+              'Massive Authority Boost',
+              'Permanent & Guaranteed',
+              'Influencer Status',
+              'Premium Engagement',
+              'Start Time: Instant',
+              'Completion: 15-25 Days'
+            ],
+            details: 'Join the influencer league with 5,000 subscribers! This package establishes you as a serious authority in your niche.',
+            unavailable: true
+          },
+          {
+            id: 'subs-6',
+            name: 'Ultimate Legend',
+            badge: 'CELEBRITY STATUS',
+            icon: <FaFireAlt className="text-4xl" />,
+            quantity: '10,000 Subscribers',
+            price: 35000,
+            originalPrice: 70000,
+            discount: 50,
+            popular: false,
+            gradient: 'from-red-500 to-pink-600',
+            features: [
+              '10,000 Real YouTube Subscribers',
+              'Celebrity-Level Community',
+              'Maximum Authority & Influence',
+              'Premium Engagement Guaranteed',
+              'Industry Leader Status',
+              'Full Channel Transformation',
+              'Start Time: Instant',
+              'Completion: 25-40 Days'
+            ],
+            details: 'Achieve celebrity status with 10,000 subscribers! This package transforms your channel into a major player in your industry.',
+            unavailable: true
+          }
+        ]
+      }
+      
       setPricingPlans(groupedPlans)
     } catch (error) {
       console.error('Failed to fetch pricing:', error)
@@ -476,8 +626,8 @@ const Pricing = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-1.5">
-                    {selectedCategory === 'subscribers' ? (
-                      /* Disabled Buttons for Subscribers */
+                    {plan.unavailable ? (
+                      /* Disabled Buttons for Unavailable Plans */
                       <>
                         <button
                           disabled
@@ -488,8 +638,8 @@ const Pricing = () => {
                         </button>
 
                         <button
-                          disabled
-                          className="w-full py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-1.5 border-2 border-gray-300 text-gray-500 cursor-not-allowed opacity-60"
+                          onClick={() => openModal(plan)}
+                          className="w-full py-1.5 rounded-lg font-semibold text-xs transition-all duration-300 flex items-center justify-center gap-1.5 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
                         >
                           <FaInfoCircle className="text-xs" />
                           <span>More Details</span>

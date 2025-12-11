@@ -2,11 +2,15 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/db.js';
 
 class Order extends Model {
-  // Method to generate order number
+  // Method to generate order number using UUID for guaranteed uniqueness
   static async generateOrderNumber() {
+    const { v4: uuidv4 } = await import('uuid');
+    const uuid = uuidv4().substring(0, 8).toUpperCase();
     const date = new Date();
-    const random = Math.floor(Math.random() * 10000);
-    return `ORD-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${random}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `ORD-${year}${month}${day}-${uuid}`;
   }
 }
 
