@@ -15,7 +15,7 @@ export const getPricingPlans = async (req, res, next) => {
 
     const plans = await Pricing.findAll({
       where,
-      order: [['order', 'ASC'], ['price', 'ASC']],
+      order: [['displayOrder', 'ASC'], ['price', 'ASC']],
       include: [{
         model: Service,
         as: 'service',
