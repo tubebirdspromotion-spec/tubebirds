@@ -52,15 +52,19 @@ const connectDB = async () => {
     await sequelize.authenticate();
     console.log('✅ MySQL Database Connected Successfully');
     
-    // Sync models with database (create tables if they don't exist)
-    if (process.env.NODE_ENV !== 'production') {
-      // In development, alter tables to match models
+    // Check if auto-sync is explicitly enabled (for Hostinger/remote DB scenarios)
+    const enableAutoSync = process.env.ENABLE_AUTO_SYNC === 'true';
+    
+    if (enableAutoSync) {
+      // Auto-sync enabled - alter tables to match models
       await sequelize.sync({ alter: true });
-      console.log('✅ Database Synchronized (Development Mode)');
+      console.log('✅ Database Synchronized (Auto Sync ENABLED)');
+      console.log('⚠️  Schema changes applied automatically');
     } else {
-      // In production, skip automatic sync to avoid schema conflicts
-      // Use migration endpoints instead: /api/seed/migrate
-      console.log('✅ Database Connected (Production Mode - Manual Migrations Only)');
+      // Auto-sync disabled (safe default)
+      console.log('✅ Database Connected (Auto Sync DISABLED)');
+      console.log('ℹ️  To sync schema: Set ENABLE_AUTO_SYNC=true in .env');
+      console.log('ℹ️  Or use manual migration: /api/seed/migrate');
     }
     
   } catch (error) {
