@@ -152,31 +152,18 @@ export const getOrder = async (req, res, next) => {
       });
     }
 
-    // Debug logging
-    console.log('📦 Order ID:', order.id);
-    console.log('🎯 Service:', order.service ? { id: order.service.id, title: order.service.title } : 'NULL');
-    console.log('💳 Pricing:', order.pricing ? { id: order.pricing.id, planName: order.pricing.planName } : 'NULL');
-    console.log('📺 Channel Details:', order.channelDetails);
-    console.log('🔢 ServiceId:', order.serviceId);
-    console.log('🔢 PricingId:', order.pricingId);
-    console.log('📋 Plan Details:', order.planDetails);
-
     // If pricing/service associations are null but planDetails exists, create virtual objects
     const orderResponse = order.toJSON();
-    console.log('🔍 Before transformation - pricing:', orderResponse.pricing);
-    console.log('🔍 Before transformation - planDetails:', orderResponse.planDetails);
-    console.log('🔍 planDetails type:', typeof orderResponse.planDetails);
-    console.log('🔍 channelDetails type:', typeof orderResponse.channelDetails);
-    console.log('🔍 channelDetails value:', orderResponse.channelDetails);
     
     // Parse planDetails if it's a string
     let planDetails = orderResponse.planDetails;
     if (typeof planDetails === 'string') {
       try {
         planDetails = JSON.parse(planDetails);
-        console.log('📋 Parsed planDetails:', planDetails);
       } catch (e) {
-        console.error('❌ Failed to parse planDetails:', e);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to parse planDetails');
+        }
         planDetails = null;
       }
     }
@@ -185,29 +172,27 @@ export const getOrder = async (req, res, next) => {
     if (typeof orderResponse.channelDetails === 'string') {
       try {
         orderResponse.channelDetails = JSON.parse(orderResponse.channelDetails);
-        console.log('📺 Parsed channelDetails:', orderResponse.channelDetails);
       } catch (e) {
-        console.error('❌ Failed to parse channelDetails:', e);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to parse channelDetails');
+        }
       }
     }
     
     // Check if pricing is null or empty object
     const hasPricing = orderResponse.pricing && Object.keys(orderResponse.pricing).length > 0;
     if (!hasPricing && planDetails) {
-      console.log('✨ Creating virtual pricing from planDetails');
       orderResponse.pricing = {
         planName: planDetails.name,
         category: planDetails.category,
         price: planDetails.price,
         quantity: planDetails.quantity
       };
-      console.log('✅ Virtual pricing created:', orderResponse.pricing);
     }
     
     // Check if service is null or empty object
     const hasService = orderResponse.service && Object.keys(orderResponse.service).length > 0;
     if (!hasService && planDetails) {
-      console.log('✨ Creating virtual service from planDetails');
       // Map category to service title
       const categoryTitleMap = {
         'views': 'YouTube Views',

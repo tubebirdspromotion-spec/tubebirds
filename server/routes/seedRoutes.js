@@ -9,14 +9,30 @@ import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
-// Security: Disable seed routes in production
+// Security: Disable seed routes in production with multiple checks
 const checkDevelopmentMode = (req, res, next) => {
-  if (process.env.NODE_ENV === 'production') {
+  // Multiple security checks to prevent production access
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      process.env.NODE_ENV === 'prod' ||
+                      !process.env.NODE_ENV;
+  
+  const isDevelopmentExplicit = process.env.ENABLE_SEED_ROUTES === 'true';
+  
+  if (isProduction && !isDevelopmentExplicit) {
+    console.warn('🚨 Unauthorized attempt to access seed routes');
     return res.status(403).json({
       status: 'error',
-      message: 'Seed routes are disabled in production for security'
+      message: 'Access denied'
     });
   }
+  
+  if (!isDevelopmentExplicit && process.env.NODE_ENV !== 'development') {
+    return res.status(403).json({
+      status: 'error',
+      message: 'Access denied'
+    });
+  }
+  
   next();
 };
 

@@ -67,8 +67,22 @@ app.use('/api/', limiter);
 
 // CORS configuration - Allow multiple origins
 const allowedOrigins = process.env.CLIENT_URL 
-  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim()).filter(url => {
+      // Validate each origin is a proper URL
+      try {
+        new URL(url);
+        return true;
+      } catch (e) {
+        console.warn(`⚠️ Invalid CORS origin ignored: ${url}`);
+        return false;
+      }
+    })
   : ['http://localhost:5173'];
+
+if (allowedOrigins.length === 0) {
+  console.error('❌ No valid CORS origins configured');
+  process.exit(1);
+}
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -84,9 +98,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging middleware
 if (process.env.NODE_ENV === 'development') {
@@ -133,6 +147,13 @@ const PORT = process.env.PORT || 5000;
 // Start server after database connection
 const startServer = async () => {
   try {
+    // Validate JWT secret strength
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+      console.error('❌ SECURITY ERROR: JWT_SECRET must be at least 32 characters long');
+      console.error('   Current length:', process.env.JWT_SECRET?.length || 0);
+      process.exit(1);
+    }
+    
     // Connect to database and sync models
     await connectDB();
     

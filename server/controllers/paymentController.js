@@ -74,10 +74,9 @@ export const createRazorpayOrder = async (req, res, next) => {
     });
 
     if (existingOrder) {
-      console.log('🔄 Idempotency: Returning existing order', {
-        orderId: existingOrder.id,
-        userId: req.user.id
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Idempotency: Returning existing order', existingOrder.id);
+      }
 
       // Calculate GST for existing order
       const pricing = await Pricing.findByPk(pricingId);
@@ -134,16 +133,15 @@ export const createRazorpayOrder = async (req, res, next) => {
 
     const serviceId = pricing.serviceId;
 
-    // Security audit log
-    console.log('💳 Payment order initiated:', {
-      userId: req.user.id,
-      userEmail: req.user.email,
-      pricingId: pricing.id,
-      planName: pricing.name,
-      price: pricing.price,
-      videoUrl: sanitizedVideoUrl.substring(0, 50),
-      timestamp: new Date().toISOString()
-    });
+    // Security audit log (production safe)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('💳 Payment order initiated:', {
+        userId: req.user.id,
+        pricingId: pricing.id,
+        planName: pricing.name,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Calculate GST (18%) - Ensure price is converted to number
     const basePrice = parseFloat(pricing.price);
@@ -309,10 +307,9 @@ export const verifyPayment = async (req, res, next) => {
     // Check if payment already processed (idempotency)
     if (order.paymentStatus === 'paid' || order.status === 'confirmed') {
       await transaction.commit();
-      console.log('🔄 Idempotency: Payment already verified', {
-        orderId: order.id,
-        paymentId: razorpay_payment_id
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 Idempotency: Payment already verified', order.id);
+      }
       
       return res.status(200).json({
         status: 'success',

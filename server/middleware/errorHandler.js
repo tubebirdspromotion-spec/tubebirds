@@ -24,10 +24,15 @@ const errorHandler = (err, req, res, next) => {
     error = { message, statusCode: 400 };
   }
 
+  // Never expose stack traces in production
+  const isProduction = process.env.NODE_ENV === 'production' || 
+                      process.env.NODE_ENV === 'prod' || 
+                      !process.env.NODE_ENV;
+  
   res.status(error.statusCode || 500).json({
     status: 'error',
     message: error.message || 'Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(!isProduction && { stack: err.stack })
   });
 };
 

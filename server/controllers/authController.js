@@ -421,17 +421,6 @@ export const verify2FA = async (req, res, next) => {
       backupCodes = JSON.parse(backupCodes);
     }
 
-    // Debug logging
-    console.log('🔐 2FA Verification Debug:');
-    console.log('User ID:', user.id);
-    console.log('User email:', user.email);
-    console.log('2FA Enabled:', user.twoFactorEnabled);
-    console.log('Backup codes exist:', !!backupCodes);
-    console.log('Backup codes type:', typeof backupCodes);
-    console.log('Backup codes is array:', Array.isArray(backupCodes));
-    console.log('Backup codes count:', backupCodes?.length);
-    console.log('Input code:', backupCode);
-
     // Verify backup code
     const codeVerification = await twoFactorService.verifyBackupCode(
       backupCode,
@@ -495,20 +484,8 @@ export const enable2FA = async (req, res, next) => {
     userToUpdate.twoFactorBackupCodes = hashedCodes;
     await userToUpdate.save();
 
-    console.log('✅ 2FA Enable Debug:');
-    console.log('User ID:', req.user.id);
-    console.log('User email:', userToUpdate.email);
-    console.log('Hashed codes count:', hashedCodes.length);
-    console.log('Hashed codes structure:', JSON.stringify(hashedCodes[0], null, 2));
-
-    // Verify the save by retrieving fresh from DB
-    const updatedUser = await User.findByPk(req.user.id);
-    console.log('Verification - 2FA Enabled:', updatedUser.twoFactorEnabled);
-    console.log('Verification - Backup codes exist:', !!updatedUser.twoFactorBackupCodes);
-    console.log('Verification - Backup codes type:', typeof updatedUser.twoFactorBackupCodes);
-    console.log('Verification - Backup codes count:', updatedUser.twoFactorBackupCodes?.length);
-    if (updatedUser.twoFactorBackupCodes && updatedUser.twoFactorBackupCodes.length > 0) {
-      console.log('Verification - First code structure:', updatedUser.twoFactorBackupCodes[0]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ 2FA Enabled for user:', req.user.id);
     }
 
     // Return plain codes (ONLY TIME THEY'RE SHOWN)
