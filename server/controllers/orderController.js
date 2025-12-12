@@ -2,6 +2,7 @@ import Order from '../models/Order.js';
 import Pricing from '../models/Pricing.js';
 import User from '../models/User.js';
 import Service from '../models/Service.js';
+import Payment from '../models/Payment.js';
 import { sendOrderConfirmation } from '../utils/emailService.js';
 
 // @desc    Get all orders (Admin gets all, User gets their own)
@@ -506,6 +507,219 @@ export const deleteOrder = async (req, res, next) => {
       message: 'Order deleted successfully'
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Generate invoice for an order
+// @route   GET /api/orders/:id/invoice
+// @access  Private
+export const generateInvoice = async (req, res, next) => {
+  try {
+    const order = await Order.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'customer',
+          attributes: ['id', 'name', 'email', 'phone']
+        },
+        {
+          model: Pricing,
+          as: 'pricing'
+        },
+        {
+          model: Service,
+          as: 'service'
+        }
+      ]
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Order not found'
+      });
+    }
+
+    // Check authorization
+    if (order.userId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Not authorized to access this invoice'
+      });
+    }
+
+    // Get payment details
+    const payment = await Payment.findOne({
+      where: { orderId: order.id, status: 'success' }
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'No successful payment found for this order'
+      });
+    }
+
+    // Parse planDetails if pricing is missing
+    let planDetails = order.planDetails;
+    if (typeof planDetails === 'string') {
+      try {
+        planDetails = JSON.parse(planDetails);
+      } catch (e) {
+        planDetails = null;
+      }
+    }
+
+    // Get pricing info
+    const pricingInfo = order.pricing || planDetails;
+    const serviceName = order.service?.title || order.service?.name || planDetails?.category || 'Service';
+
+    // Convert amounts to numbers
+    const baseAmount = parseFloat(order.baseAmount || payment.baseAmount || 0);
+    const gstAmount = parseFloat(order.gstAmount || payment.gstAmount || 0);
+    const totalAmount = parseFloat(order.totalAmount || payment.amount || 0);
+    const gstRate = order.gstRate || 18;
+
+    // Company details (update these with your company information)
+    const companyDetails = {
+      name: 'TubeBirds',
+      address: 'Your Company Address',
+      city: 'Your City, State - PIN',
+      email: 'info@tubebirds.com',
+      phone: '+91-XXXXXXXXXX',
+      gstin: process.env.COMPANY_GST_NUMBER || 'GSTIN: Not Available',
+      website: 'www.tubebirds.com'
+    };
+
+    // Generate HTML invoice
+    const invoiceHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice - ${order.orderNumber}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Arial', sans-serif; padding: 20px; background: #f5f5f5; }
+    .invoice { max-width: 800px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; border-bottom: 3px solid #10b981; padding-bottom: 20px; }
+    .company-info h1 { color: #10b981; font-size: 28px; margin-bottom: 10px; }
+    .company-info p { color: #666; font-size: 12px; line-height: 1.6; }
+    .invoice-title { text-align: right; }
+    .invoice-title h2 { color: #333; font-size: 32px; margin-bottom: 10px; }
+    .invoice-title p { color: #666; font-size: 14px; }
+    .details-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .details-box { width: 48%; }
+    .details-box h3 { color: #10b981; font-size: 14px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 2px solid #e5e5e5; padding-bottom: 5px; }
+    .details-box p { color: #333; font-size: 13px; margin-bottom: 5px; line-height: 1.6; }
+    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    .items-table thead { background: #10b981; color: white; }
+    .items-table th { padding: 12px; text-align: left; font-size: 13px; font-weight: 600; }
+    .items-table td { padding: 12px; border-bottom: 1px solid #e5e5e5; font-size: 13px; color: #333; }
+    .items-table tbody tr:last-child td { border-bottom: 2px solid #10b981; }
+    .totals { margin-left: auto; width: 300px; }
+    .totals-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e5e5; }
+    .totals-row span:first-child { color: #666; font-size: 13px; }
+    .totals-row span:last-child { color: #333; font-size: 13px; font-weight: 600; }
+    .totals-row.total { border-top: 2px solid #10b981; border-bottom: 3px double #10b981; margin-top: 10px; padding: 15px 0; }
+    .totals-row.total span { font-size: 16px; font-weight: bold; color: #10b981; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e5e5; text-align: center; }
+    .footer p { color: #666; font-size: 12px; margin-bottom: 5px; }
+    .payment-status { display: inline-block; padding: 8px 16px; background: #d1fae5; color: #059669; border-radius: 20px; font-weight: 600; font-size: 12px; margin: 20px 0; }
+    @media print {
+      body { background: white; padding: 0; }
+      .invoice { box-shadow: none; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice">
+    <div class="header">
+      <div class="company-info">
+        <h1>${companyDetails.name}</h1>
+        <p>${companyDetails.address}</p>
+        <p>${companyDetails.city}</p>
+        <p>Email: ${companyDetails.email}</p>
+        <p>Phone: ${companyDetails.phone}</p>
+        <p><strong>${companyDetails.gstin}</strong></p>
+      </div>
+      <div class="invoice-title">
+        <h2>INVOICE</h2>
+        <p><strong>Invoice #:</strong> ${payment.invoiceNumber || order.orderNumber}</p>
+        <p><strong>Date:</strong> ${new Date(payment.createdAt).toLocaleDateString('en-IN')}</p>
+        <div class="payment-status">✓ PAID</div>
+      </div>
+    </div>
+
+    <div class="details-section">
+      <div class="details-box">
+        <h3>Bill To</h3>
+        <p><strong>${order.customer?.name || 'N/A'}</strong></p>
+        <p>${order.customer?.email || ''}</p>
+        <p>${order.customer?.phone || ''}</p>
+      </div>
+      <div class="details-box">
+        <h3>Payment Details</h3>
+        <p><strong>Order Number:</strong> ${order.orderNumber}</p>
+        <p><strong>Payment ID:</strong> ${payment.razorpayPaymentId || 'N/A'}</p>
+        <p><strong>Transaction ID:</strong> ${payment.razorpayPaymentId || payment.transactionId || 'N/A'}</p>
+        <p><strong>Payment Date:</strong> ${new Date(payment.capturedAt || payment.createdAt).toLocaleDateString('en-IN')}</p>
+        <p><strong>Payment Method:</strong> ${payment.paymentMode || payment.paymentGateway || 'Razorpay'}</p>
+      </div>
+    </div>
+
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Plan/Package</th>
+          <th style="text-align: right;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${serviceName}</td>
+          <td>${pricingInfo?.name || pricingInfo?.planName || 'Standard Plan'}</td>
+          <td style="text-align: right;">₹${baseAmount.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="totals-row">
+        <span>Subtotal</span>
+        <span>₹${baseAmount.toFixed(2)}</span>
+      </div>
+      <div class="totals-row">
+        <span>GST (${gstRate}%)</span>
+        <span>₹${gstAmount.toFixed(2)}</span>
+      </div>
+      <div class="totals-row total">
+        <span>Total Amount</span>
+        <span>₹${totalAmount.toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p><strong>Thank you for your business!</strong></p>
+      <p>This is a computer-generated invoice and does not require a signature.</p>
+      <p>For any queries, please contact us at ${companyDetails.email}</p>
+      <p style="margin-top: 20px; color: #999; font-size: 11px;">Invoice generated on ${new Date().toLocaleDateString('en-IN')}</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    // Set response headers for HTML download
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${order.orderNumber}.html"`);
+    res.send(invoiceHtml);
+
+  } catch (error) {
+    console.error('❌ Generate invoice error:', error);
     next(error);
   }
 };

@@ -394,6 +394,7 @@ export const verifyPayment = async (req, res, next) => {
       await payment.update({
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature,
+        transactionId: razorpay_payment_id, // Add transaction ID
         status: 'success',
         paymentMode: paymentDetails?.method || null,
         paymentResponse: paymentDetails || {},

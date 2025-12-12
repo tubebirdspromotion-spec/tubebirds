@@ -7,7 +7,8 @@ import {
   updateOrderStatus,
   updateOrderProgress,
   addOrderNote,
-  deleteOrder
+  deleteOrder,
+  generateInvoice
 } from '../controllers/orderController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
@@ -17,6 +18,7 @@ router.use(protect); // All routes require authentication
 
 router.get('/', getOrders);
 router.get('/:id', getOrder);
+router.get('/:id/invoice', generateInvoice);
 router.post('/', createOrder);
 router.put('/:id', authorize('admin'), updateOrder);
 router.put('/:id/status', authorize('admin'), updateOrderStatus);

@@ -211,6 +211,7 @@ export const sendOrderConfirmation = async (order, user) => {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} TubeBirds Promotion. All rights reserved.</p>
           <p>You're receiving this email because you placed an order with us.</p>
+          ${process.env.COMPANY_GST_NUMBER ? `<p style="margin-top: 10px; font-size: 11px;"><strong>GSTIN:</strong> ${process.env.COMPANY_GST_NUMBER}</p>` : ''}
         </div>
       </div>
     </body>
@@ -367,6 +368,7 @@ export const sendPaymentReceipt = async (order, payment, user) => {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} TubeBirds Promotion. All rights reserved.</p>
           <p>This is an automated receipt. Please save this email for your records.</p>
+          ${process.env.COMPANY_GST_NUMBER ? `<p style="margin-top: 10px; font-size: 11px;"><strong>GSTIN:</strong> ${process.env.COMPANY_GST_NUMBER}</p>` : ''}
         </div>
       </div>
     </body>
@@ -399,7 +401,7 @@ export const sendPasswordResetEmail = async (user, resetToken) => {
         .header { background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
         .button { display: inline-block; background: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; padding: 20px; background: #f0f0f0; border-radius: 0 0 10px 10px; }
         .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }
       </style>
     </head>
@@ -429,6 +431,7 @@ export const sendPasswordResetEmail = async (user, resetToken) => {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} TubeBirds Promotion. All rights reserved.</p>
           <p>If you need help, contact us at ${process.env.ADMIN_EMAIL}</p>
+          ${process.env.COMPANY_GST_NUMBER ? `<p style="margin-top: 10px; font-size: 11px;"><strong>GSTIN:</strong> ${process.env.COMPANY_GST_NUMBER}</p>` : ''}
         </div>
       </div>
     </body>

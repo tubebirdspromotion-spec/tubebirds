@@ -175,14 +175,14 @@ const Orders = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-700 mb-2">Video Details</h4>
-                      {order.videoUrl ? (
+                      {order.channelDetails?.videoUrl ? (
                         <a 
-                          href={order.videoUrl} 
+                          href={order.channelDetails.videoUrl} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline text-sm break-all"
                         >
-                          {order.videoUrl}
+                          {order.channelDetails.videoUrl}
                         </a>
                       ) : (
                         <p className="text-gray-500 text-sm">No video URL provided</p>
