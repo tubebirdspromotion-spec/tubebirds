@@ -592,14 +592,14 @@ export const generateInvoice = async (req, res, next) => {
 
     // Company details
     const companyDetails = {
-      name: 'TubeBirds',
+      name: 'Tubebirds promotion',
       address: 'Badauli Adai, Bhanwarkol',
       city: 'Dist- Ghazipur, Uttar Pradesh 233231',
       email: 'contact@tubebirdspromotion.com',
       phone: '+91 8081447837',
       gstin: process.env.COMPANY_GST_NUMBER || '',
       website: 'www.tubebirdspromotion.com',
-      logo: 'https://tubebirdspromotion.com/images/logo.png'
+      logo: 'https://tubebirdspromotion.com/logo.png'
     };
 
     // Generate HTML invoice
@@ -650,13 +650,16 @@ export const generateInvoice = async (req, res, next) => {
   <div class="invoice">
     <div class="header">
       <div class="company-info">
-        <img src="${companyDetails.logo}" alt="${companyDetails.name}" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
-        <h1 style="display: none;">${companyDetails.name}</h1>
-        <p>${companyDetails.address}</p>
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+          <img src="${companyDetails.logo}" alt="${companyDetails.name}" class="logo" style="max-width: 60px; height: auto; margin-right: 12px;" onerror="this.style.display='none';" />
+          <h1 style="color: #10b981; font-size: 24px; margin: 0;">${companyDetails.name}</h1>
+        </div>
+        <p><strong>Address:</strong> ${companyDetails.address}</p>
         <p>${companyDetails.city}</p>
-        <p>Email: ${companyDetails.email}</p>
-        <p>Phone: ${companyDetails.phone}</p>
-        ${companyDetails.gstin ? `<p><strong>GSTIN: ${companyDetails.gstin}</strong></p>` : ''}
+        <p><strong>Email:</strong> ${companyDetails.email}</p>
+        <p><strong>Phone:</strong> ${companyDetails.phone}</p>
+        ${companyDetails.gstin ? `<p><strong>GSTIN:</strong> ${companyDetails.gstin}</p>` : ''}
+        <p><strong>Website:</strong> ${companyDetails.website}</p>
       </div>
       <div class="invoice-title">
         <h2>INVOICE</h2>
