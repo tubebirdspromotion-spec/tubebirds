@@ -207,7 +207,7 @@ export const getClientDashboard = async (req, res, next) => {
         {
           model: Pricing,
           as: 'pricing',
-          attributes: ['id', 'planName', 'quantity', 'price', 'category', 'description'],
+          attributes: ['id', 'name', 'quantity', 'price', 'category', 'description'],
           required: false
         },
         {

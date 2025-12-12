@@ -196,7 +196,7 @@ const OrderDetail = () => {
               <div>
                 <label className="text-sm font-semibold text-gray-600">Plan Name</label>
                 <p className="text-lg font-medium text-gray-900 mt-1">
-                  {order.pricing?.planName || order.planDetails?.name || 'N/A'}
+                  {order.pricing?.name || order.planDetails?.name || 'N/A'}
                 </p>
               </div>
               <div>
@@ -204,9 +204,9 @@ const OrderDetail = () => {
                 <p className="text-lg font-medium text-gray-900 mt-1">{order.service?.title || 'N/A'}</p>
               </div>
               <div>
-                <label className="text-sm font-semibold text-gray-600">Initial Target</label>
+                <label className="text-sm font-semibold text-gray-600">Quantity</label>
                 <p className="text-lg font-medium text-gray-900 mt-1">
-                  {order.targetQuantity || order.planDetails?.quantity || 0}
+                  {order.pricing?.quantity || order.planDetails?.quantity || 'N/A'}
                 </p>
               </div>
               <div>
@@ -285,24 +285,12 @@ const OrderDetail = () => {
                     style={{ width: `${order.progress || 0}%` }}
                   ></div>
                 </div>
+                {order.progress > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800 mt-3">
+                    📊 Order Progress: {order.progress}% Complete
+                  </div>
+                )}
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Completed Quantity</label>
-                  <p className="text-2xl font-bold text-green-600 mt-1">{order.completedQuantity || 0}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-semibold text-gray-600">Target Quantity</label>
-                  <p className="text-2xl font-bold text-blue-600 mt-1">{order.targetQuantity || 0}</p>
-                </div>
-              </div>
-
-              {order.completedQuantity !== undefined && order.targetQuantity && (
-                <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-800">
-                  Progress: {order.completedQuantity} out of {order.targetQuantity} items delivered
-                </div>
-              )}
             </div>
           </div>
 

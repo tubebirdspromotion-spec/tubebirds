@@ -128,8 +128,8 @@ export const sendOrderConfirmation = async (order, user) => {
             
             <h3 style="color: #667eea; margin-bottom: 15px;">📦 Plan & Service Details</h3>
             <div class="plan-box">
-              <p style="margin: 5px 0; font-size: 16px;"><strong>🎯 Service:</strong> ${order.service?.name || 'N/A'}</p>
-              <p style="margin: 5px 0; font-size: 16px;"><strong>📌 Plan:</strong> ${order.pricing?.planName || 'N/A'}</p>
+              <p style="margin: 5px 0; font-size: 16px;"><strong>🎯 Service:</strong> ${order.service?.title || 'N/A'}</p>
+              <p style="margin: 5px 0; font-size: 16px;"><strong>📌 Plan:</strong> ${order.pricing?.name || 'N/A'}</p>
               ${order.pricing?.serviceType ? `<p style="margin: 5px 0;"><strong>Type:</strong> ${order.pricing.serviceType}</p>` : ''}
               ${order.pricing?.tier ? `<p style="margin: 5px 0;"><strong>Tier:</strong> <span style="text-transform: capitalize;">${order.pricing.tier}</span></p>` : ''}
               ${order.pricing?.quantity ? `<p style="margin: 5px 0;"><strong>Quantity:</strong> ${order.pricing.quantity}</p>` : ''}
@@ -291,16 +291,16 @@ export const sendPaymentReceipt = async (order, payment, user) => {
             <p><strong>Order Number:</strong> ${order.orderNumber}</p>
             <p><strong>Invoice Number:</strong> ${payment.invoiceNumber || order.orderNumber}</p>
             <p><strong>Payment Date:</strong> ${new Date(payment.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</p>
-            <p><strong>Payment Method:</strong> ${payment.paymentMode ? payment.paymentMode.toUpperCase() : payment.gateway.toUpperCase()}</p>
-            <p><strong>Payment Gateway:</strong> ${payment.gateway.toUpperCase()}</p>
+            <p><strong>Payment Method:</strong> ${payment.paymentMode ? payment.paymentMode.toUpperCase() : (payment.paymentGateway ? payment.paymentGateway.toUpperCase() : 'RAZORPAY')}</p>
+            <p><strong>Payment Gateway:</strong> ${payment.paymentGateway ? payment.paymentGateway.toUpperCase() : 'RAZORPAY'}</p>
             <p><strong>Status:</strong> <span style="color: #10b981; font-weight: bold;">✓ ${payment.status.toUpperCase()}</span></p>
             
             <hr style="margin: 20px 0; border: none; border-top: 2px solid #10b981;">
             
             <h3 style="color: #10b981; margin-bottom: 15px;">📦 Plan Details</h3>
             <div class="plan-details">
-              <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service?.name || 'N/A'}</p>
-              <p style="margin: 5px 0;"><strong>Plan Name:</strong> ${order.pricing?.planName || 'N/A'}</p>
+              <p style="margin: 5px 0;"><strong>Service:</strong> ${order.service?.title || 'N/A'}</p>
+              <p style="margin: 5px 0;"><strong>Plan Name:</strong> ${order.pricing?.name || 'N/A'}</p>
               <p style="margin: 5px 0;"><strong>Plan Type:</strong> ${order.pricing?.serviceType || 'N/A'}</p>
               ${order.pricing?.quantity ? `<p style="margin: 5px 0;"><strong>Quantity:</strong> ${order.pricing.quantity}</p>` : ''}
               ${order.pricing?.tier ? `<p style="margin: 5px 0;"><strong>Tier:</strong> ${order.pricing.tier}</p>` : ''}
