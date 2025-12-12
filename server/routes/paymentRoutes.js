@@ -9,6 +9,7 @@ import {
   refundPayment
 } from '../controllers/paymentController.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { validateRazorpayWebhookIP } from '../middleware/razorpayWebhookValidator.js';
 
 const router = express.Router();
 
@@ -21,8 +22,8 @@ const paymentLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Webhook route (no auth, verified by signature)
-router.post('/webhook', express.raw({ type: 'application/json' }), handleWebhook);
+// Webhook route (IP validated, signature verified)
+router.post('/webhook', validateRazorpayWebhookIP, express.raw({ type: 'application/json' }), handleWebhook);
 
 // Protected routes
 router.use(protect);
