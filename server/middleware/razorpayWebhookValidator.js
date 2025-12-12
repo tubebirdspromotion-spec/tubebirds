@@ -4,16 +4,19 @@ import { isIP } from 'net';
  * Razorpay Webhook IP Whitelist
  * Source: https://razorpay.com/docs/webhooks/validate-ip-addresses/
  * 
- * Razorpay sends webhooks from these IP ranges:
- * - 3.6.127.0/25 (AWS Mumbai)
- * - 3.7.171.128/25 (AWS Mumbai)
+ * Razorpay sends webhooks from these IP ranges (AWS Mumbai):
+ * - 3.6.127.0/25
+ * - 3.7.171.128/25
+ * - 52.66.0.0/16 (Primary range)
  */
 
 const RAZORPAY_IP_RANGES = [
   // AWS Mumbai Region - Range 1
   { start: '3.6.127.0', end: '3.6.127.127' },
   // AWS Mumbai Region - Range 2
-  { start: '3.7.171.128', end: '3.7.171.255' }
+  { start: '3.7.171.128', end: '3.7.171.255' },
+  // AWS Mumbai Region - Range 3 (Primary - 52.66.0.0/16)
+  { start: '52.66.0.0', end: '52.66.255.255' }
 ];
 
 /**
