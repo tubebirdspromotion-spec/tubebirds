@@ -590,15 +590,16 @@ export const generateInvoice = async (req, res, next) => {
     const totalAmount = parseFloat(order.totalAmount || payment.amount || 0);
     const gstRate = order.gstRate || 18;
 
-    // Company details (update these with your company information)
+    // Company details
     const companyDetails = {
       name: 'TubeBirds',
-      address: 'Your Company Address',
-      city: 'Your City, State - PIN',
-      email: 'info@tubebirds.com',
-      phone: '+91-XXXXXXXXXX',
-      gstin: process.env.COMPANY_GST_NUMBER || 'GSTIN: Not Available',
-      website: 'www.tubebirds.com'
+      address: 'Badauli Adai, Bhanwarkol',
+      city: 'Dist- Ghazipur, Uttar Pradesh 233231',
+      email: 'contact@tubebirdspromotion.com',
+      phone: '+91 8081447837',
+      gstin: process.env.COMPANY_GST_NUMBER || '',
+      website: 'www.tubebirdspromotion.com',
+      logo: 'https://tubebirdspromotion.com/images/logo.png'
     };
 
     // Generate HTML invoice
@@ -614,6 +615,8 @@ export const generateInvoice = async (req, res, next) => {
     body { font-family: 'Arial', sans-serif; padding: 20px; background: #f5f5f5; }
     .invoice { max-width: 800px; margin: 0 auto; background: white; padding: 40px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     .header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px; border-bottom: 3px solid #10b981; padding-bottom: 20px; }
+    .company-info { flex: 1; }
+    .company-info img.logo { max-width: 150px; height: auto; margin-bottom: 10px; }
     .company-info h1 { color: #10b981; font-size: 28px; margin-bottom: 10px; }
     .company-info p { color: #666; font-size: 12px; line-height: 1.6; }
     .invoice-title { text-align: right; }
@@ -647,12 +650,13 @@ export const generateInvoice = async (req, res, next) => {
   <div class="invoice">
     <div class="header">
       <div class="company-info">
-        <h1>${companyDetails.name}</h1>
+        <img src="${companyDetails.logo}" alt="${companyDetails.name}" class="logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+        <h1 style="display: none;">${companyDetails.name}</h1>
         <p>${companyDetails.address}</p>
         <p>${companyDetails.city}</p>
         <p>Email: ${companyDetails.email}</p>
         <p>Phone: ${companyDetails.phone}</p>
-        <p><strong>${companyDetails.gstin}</strong></p>
+        ${companyDetails.gstin ? `<p><strong>GSTIN: ${companyDetails.gstin}</strong></p>` : ''}
       </div>
       <div class="invoice-title">
         <h2>INVOICE</h2>
