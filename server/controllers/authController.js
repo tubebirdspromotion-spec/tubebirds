@@ -409,6 +409,16 @@ export const verify2FA = async (req, res, next) => {
       });
     }
 
+    // Debug logging
+    console.log('🔐 2FA Verification Debug:');
+    console.log('User ID:', user.id);
+    console.log('User email:', user.email);
+    console.log('2FA Enabled:', user.twoFactorEnabled);
+    console.log('Backup codes exist:', !!user.twoFactorBackupCodes);
+    console.log('Backup codes type:', typeof user.twoFactorBackupCodes);
+    console.log('Backup codes:', JSON.stringify(user.twoFactorBackupCodes, null, 2));
+    console.log('Input code:', backupCode);
+
     // Verify backup code
     const codeVerification = await twoFactorService.verifyBackupCode(
       backupCode,
@@ -476,20 +486,37 @@ export const enable2FA = async (req, res, next) => {
     // Hash codes for storage
     const hashedCodes = await twoFactorService.hashBackupCodes(plainCodes);
 
-    // Update user
-    await User.update(
-      {
-        twoFactorEnabled: true,
-        twoFactorBackupCodes: hashedCodes
-      },
-      { where: { id: req.user.id } }
-    );
+    // Get the user instance to update directly
+    const userToUpdate = await User.findByPk(req.user.id);
+    
+    // Update directly on the instance (better for JSON fields)
+    userToUpdate.twoFactorEnabled = true;
+    userToUpdate.twoFactorBackupCodes = hashedCodes;
+    await userToUpdate.save();
+
+    console.log('✅ 2FA Enable Debug:');
+    console.log('User ID:', req.user.id);
+    console.log('User email:', userToUpdate.email);
+    console.log('Hashed codes count:', hashedCodes.length);
+    console.log('Hashed codes structure:', JSON.stringify(hashedCodes[0], null, 2));
+
+    // Verify the save by retrieving fresh from DB
+    const updatedUser = await User.findByPk(req.user.id);
+    console.log('Verification - 2FA Enabled:', updatedUser.twoFactorEnabled);
+    console.log('Verification - Backup codes exist:', !!updatedUser.twoFactorBackupCodes);
+    console.log('Verification - Backup codes type:', typeof updatedUser.twoFactorBackupCodes);
+    console.log('Verification - Backup codes count:', updatedUser.twoFactorBackupCodes?.length);
+    if (updatedUser.twoFactorBackupCodes && updatedUser.twoFactorBackupCodes.length > 0) {
+      console.log('Verification - First code structure:', updatedUser.twoFactorBackupCodes[0]);
+    }
 
     // Return plain codes (ONLY TIME THEY'RE SHOWN)
     res.status(200).json({
       status: 'success',
       message: '2FA enabled successfully! Save these backup codes securely.',
       backupCodes: plainCodes,
+      userId: req.user.id,
+      userEmail: req.user.email,
       warning: 'These codes will only be shown once. Store them securely!'
     });
   } catch (error) {
