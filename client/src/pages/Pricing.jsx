@@ -609,13 +609,15 @@ const Pricing = () => {
 
                 {/* Card Body */}
                 <div className="p-4">
-                  {/* Video Length Required */}
-                  <div className="mb-4 flex items-center justify-center">
-                    <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${plan.gradient} text-white px-4 py-2 rounded-full shadow-lg`}>
-                      <FaClock className="text-sm animate-pulse" />
-                      <span className="text-xs font-bold tracking-wide">60min + Video Required</span>
+                  {/* Video Length Required - Only for Monetization Plans */}
+                  {selectedCategory === 'monetization' && (
+                    <div className="mb-4 flex items-center justify-center">
+                      <div className={`inline-flex items-center gap-2 bg-gradient-to-r ${plan.gradient} text-white px-4 py-2 rounded-full shadow-lg`}>
+                        <FaClock className="text-sm animate-pulse" />
+                        <span className="text-xs font-bold tracking-wide">60min + Video Required</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Features List */}
                   <ul className="space-y-1.5 mb-4">
