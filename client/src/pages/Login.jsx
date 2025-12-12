@@ -4,33 +4,65 @@ import { useDispatch, useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
 import { FaYoutube, FaEnvelope, FaLock, FaArrowRight, FaCheckCircle } from 'react-icons/fa'
 import toast from 'react-hot-toast'
-import { login } from '../store/slices/authSlice'
+import { login, verify2FA } from '../store/slices/authSlice'
+import TwoFactorModal from '../components/TwoFactorModal'
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [show2FAModal, setShow2FAModal] = useState(false)
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const { require2FA, tempToken, unusedCodes } = useSelector((state) => state.auth)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
       const result = await dispatch(login(formData)).unwrap()
-      toast.success('Login successful!')
       
-      // Redirect based on role
-      if (result.data.user.role === 'admin') {
-        navigate('/admin')
+      // Check if 2FA is required
+      if (result.require2FA) {
+        setShow2FAModal(true)
+        toast.success('Please enter your backup code')
       } else {
-        // Regular users stay on main website
-        navigate('/')
+        // Normal login success
+        toast.success('Login successful!')
+        
+        // Redirect based on role
+        if (result.data.user.role === 'admin') {
+          navigate('/admin')
+        } else {
+          navigate('/')
+        }
       }
     } catch (error) {
       toast.error(error || 'Login failed')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handle2FAVerify = async (tempToken, backupCode) => {
+    try {
+      const result = await dispatch(verify2FA({ tempToken, backupCode })).unwrap()
+      
+      setShow2FAModal(false)
+      toast.success('2FA verification successful!')
+      
+      // Redirect based on role
+      if (result.data.user.role === 'admin') {
+        navigate('/admin')
+      } else {
+        navigate('/')
+      }
+    } catch (error) {
+      throw new Error(error || 'Invalid backup code')
+    }
+  }
+
+  const handle2FAClose = () => {
+    setShow2FAModal(false)
   }
 
   const benefits = [
@@ -42,6 +74,15 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-orange-50 to-red-100 relative overflow-hidden">
+      {/* 2FA Modal */}
+      <TwoFactorModal
+        isOpen={show2FAModal}
+        onClose={handle2FAClose}
+        onVerify={handle2FAVerify}
+        tempToken={tempToken}
+        unusedCodes={unusedCodes}
+      />
+
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div

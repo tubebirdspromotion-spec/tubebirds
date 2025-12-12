@@ -11,6 +11,9 @@ const initialState = {
   isAuthenticated: false, // Will be set after user loads
   loading: !!initialToken, // Start loading if token exists, will load user data
   error: null,
+  require2FA: false,
+  tempToken: null,
+  unusedCodes: null,
 }
 
 // Async thunks
@@ -36,6 +39,19 @@ export const register = createAsyncThunk(
       return response.data
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Registration failed')
+    }
+  }
+)
+
+export const verify2FA = createAsyncThunk(
+  'auth/verify2FA',
+  async ({ tempToken, backupCode }, { rejectWithValue }) => {
+    try {
+      const response = await api.post('/auth/verify-2fa', { tempToken, backupCode })
+      localStorage.setItem('token', response.data.token)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || '2FA verification failed')
     }
   }
 )
@@ -131,12 +147,25 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(login.fulfilled, (state, action) => {
-        console.log('✅ login.fulfilled:', action.payload.data.user)
+        console.log('✅ login.fulfilled:', action.payload)
         state.loading = false
-        state.isAuthenticated = true
-        state.token = action.payload.token
-        state.user = action.payload.data.user
-        state.error = null
+        
+        // Check if 2FA is required
+        if (action.payload.require2FA) {
+          state.require2FA = true
+          state.tempToken = action.payload.tempToken
+          state.unusedCodes = action.payload.unusedCodes
+          state.isAuthenticated = false
+          state.error = null
+        } else {
+          // Normal login
+          state.isAuthenticated = true
+          state.token = action.payload.token
+          state.user = action.payload.data.user
+          state.error = null
+          state.require2FA = false
+          state.tempToken = null
+        }
       })
       .addCase(login.rejected, (state, action) => {
         console.log('❌ login.rejected:', action.payload)
@@ -156,6 +185,28 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(register.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload
+      })
+      // Verify 2FA
+      .addCase(verify2FA.pending, (state) => {
+        console.log('⏳ verify2FA.pending')
+        state.loading = true
+        state.error = null
+      })
+      .addCase(verify2FA.fulfilled, (state, action) => {
+        console.log('✅ verify2FA.fulfilled:', action.payload.data.user)
+        state.loading = false
+        state.isAuthenticated = true
+        state.token = action.payload.token
+        state.user = action.payload.data.user
+        state.error = null
+        state.require2FA = false
+        state.tempToken = null
+        state.unusedCodes = null
+      })
+      .addCase(verify2FA.rejected, (state, action) => {
+        console.log('❌ verify2FA.rejected:', action.payload)
         state.loading = false
         state.error = action.payload
       })
