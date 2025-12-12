@@ -66,7 +66,17 @@ export const getPricingPlan = async (req, res, next) => {
 // @access  Private/Admin
 export const createPricingPlan = async (req, res, next) => {
   try {
-    const plan = await Pricing.create(req.body);
+    // Security: Whitelist allowed fields
+    const allowedFields = ['serviceId', 'planName', 'category', 'quantity', 'price', 'originalPrice', 'discount', 'deliveryTime', 'features', 'isPopular', 'order', 'isActive'];
+    const pricingData = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        pricingData[field] = req.body[field];
+      }
+    });
+
+    const plan = await Pricing.create(pricingData);
 
     res.status(201).json({
       status: 'success',
@@ -91,7 +101,17 @@ export const updatePricingPlan = async (req, res, next) => {
       });
     }
 
-    await plan.update(req.body);
+    // Security: Whitelist allowed fields
+    const allowedFields = ['serviceId', 'planName', 'category', 'quantity', 'price', 'originalPrice', 'discount', 'deliveryTime', 'features', 'isPopular', 'order', 'isActive'];
+    const updates = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    await plan.update(updates);
 
     res.status(200).json({
       status: 'success',

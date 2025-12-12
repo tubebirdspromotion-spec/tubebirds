@@ -1,12 +1,37 @@
 import Contact from '../models/Contact.js';
 import { sendContactNotification } from '../utils/emailService.js';
+import validator from 'validator';
 
 // @desc    Submit contact form
 // @route   POST /api/contact
 // @access  Public
 export const submitContact = async (req, res, next) => {
   try {
-    const contact = await Contact.create(req.body);
+    // Validate and sanitize inputs
+    const allowedFields = ['name', 'email', 'phone', 'subject', 'message'];
+    const contactData = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        const value = req.body[field];
+        // Sanitize string inputs to prevent XSS
+        if (typeof value === 'string') {
+          contactData[field] = validator.escape(value.trim());
+        } else {
+          contactData[field] = value;
+        }
+      }
+    });
+
+    // Validate required fields
+    if (!contactData.name || !contactData.email || !contactData.message) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide name, email, and message'
+      });
+    }
+
+    const contact = await Contact.create(contactData);
 
     // Send email notification to admin
     try {

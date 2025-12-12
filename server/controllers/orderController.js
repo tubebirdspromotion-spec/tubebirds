@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Service from '../models/Service.js';
 import Payment from '../models/Payment.js';
 import { sendOrderConfirmation } from '../utils/emailService.js';
+import validator from 'validator';
 
 // @desc    Get all orders (Admin gets all, User gets their own)
 // @route   GET /api/orders
@@ -478,10 +479,30 @@ export const addOrderNote = async (req, res, next) => {
       });
     }
 
+    // Validate and sanitize note message
+    const message = req.body.message;
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide a valid note message'
+      });
+    }
+
+    if (message.length > 1000) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Note message cannot exceed 1000 characters'
+      });
+    }
+
+    // Sanitize message to prevent XSS
+    const sanitizedMessage = validator.escape(message.trim());
+
     const notes = order.notes || [];
     notes.push({
-      message: req.body.message,
-      createdBy: req.user.id
+      message: sanitizedMessage,
+      createdBy: req.user.id,
+      createdAt: new Date()
     });
 
     await order.update({ notes });

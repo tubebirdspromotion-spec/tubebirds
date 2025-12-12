@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import { sendTokenResponse } from '../utils/tokenUtils.js';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
+import twoFactorService from '../utils/twoFactorService.js';
 import crypto from 'crypto';
 import { sequelize } from '../config/db.js';
 
@@ -25,7 +26,7 @@ export const register = async (req, res, next) => {
     if (userExists) {
       return res.status(400).json({
         status: 'error',
-        message: 'User already exists with this email'
+        message: 'Registration failed. Please try again with different information.'
       });
     }
 
@@ -89,7 +90,7 @@ export const login = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         status: 'error',
-        message: 'Invalid credentials'
+        message: 'Invalid email or password'
       });
     }
 
@@ -107,7 +108,22 @@ export const login = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         status: 'error',
-        message: 'Invalid credentials'
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Check if user is admin and 2FA is enabled
+    if (user.role === 'admin' && user.twoFactorEnabled) {
+      // Generate temporary token for 2FA verification
+      const tempToken = twoFactorService.generateTempToken(user.id);
+      
+      // Return 2FA required response
+      return res.status(200).json({
+        status: 'success',
+        require2FA: true,
+        tempToken,
+        message: 'Please enter your backup code to complete login',
+        unusedCodes: twoFactorService.getUnusedCodesCount(user.twoFactorBackupCodes)
       });
     }
 
@@ -353,6 +369,250 @@ export const resetPassword = async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       message: 'Password has been reset successfully. You can now login with your new password.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Verify 2FA backup code (Admin only)
+// @route   POST /api/auth/verify-2fa
+// @access  Public (requires tempToken)
+export const verify2FA = async (req, res, next) => {
+  try {
+    const { tempToken, backupCode } = req.body;
+
+    // Validate inputs
+    if (!tempToken || !backupCode) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide temp token and backup code'
+      });
+    }
+
+    // Verify temp token
+    const tokenVerification = twoFactorService.verifyTempToken(tempToken);
+    if (!tokenVerification.valid) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid or expired session. Please login again.'
+      });
+    }
+
+    // Get user with backup codes
+    const user = await User.scope('withPassword').findByPk(tokenVerification.userId);
+    
+    if (!user || user.role !== 'admin') {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid session'
+      });
+    }
+
+    // Verify backup code
+    const codeVerification = await twoFactorService.verifyBackupCode(
+      backupCode,
+      user.twoFactorBackupCodes
+    );
+
+    if (!codeVerification.valid) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid backup code'
+      });
+    }
+
+    // Mark code as used
+    const updatedCodes = twoFactorService.markCodeAsUsed(
+      user.twoFactorBackupCodes,
+      codeVerification.codeIndex
+    );
+
+    await user.update({
+      twoFactorBackupCodes: updatedCodes,
+      lastLogin: new Date()
+    });
+
+    // Get unused codes count
+    const unusedCount = twoFactorService.getUnusedCodesCount(updatedCodes);
+
+    // Get user without password
+    const userWithoutPassword = await User.findByPk(user.id);
+
+    // Send token response
+    sendTokenResponse(userWithoutPassword, 200, res, {
+      unusedBackupCodes: unusedCount,
+      warning: unusedCount <= 2 ? 'You have few backup codes remaining. Please regenerate them.' : null
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Enable 2FA for admin (generates backup codes)
+// @route   POST /api/auth/enable-2fa
+// @access  Private/Admin
+export const enable2FA = async (req, res, next) => {
+  try {
+    // Only admins can enable 2FA
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Only admin users can enable 2FA'
+      });
+    }
+
+    // Check if already enabled
+    if (req.user.twoFactorEnabled) {
+      return res.status(400).json({
+        status: 'error',
+        message: '2FA is already enabled. Use regenerate endpoint to get new codes.'
+      });
+    }
+
+    // Generate 5 backup codes
+    const plainCodes = twoFactorService.generateBackupCodes(5);
+    
+    // Hash codes for storage
+    const hashedCodes = await twoFactorService.hashBackupCodes(plainCodes);
+
+    // Update user
+    await User.update(
+      {
+        twoFactorEnabled: true,
+        twoFactorBackupCodes: hashedCodes
+      },
+      { where: { id: req.user.id } }
+    );
+
+    // Return plain codes (ONLY TIME THEY'RE SHOWN)
+    res.status(200).json({
+      status: 'success',
+      message: '2FA enabled successfully! Save these backup codes securely.',
+      backupCodes: plainCodes,
+      warning: 'These codes will only be shown once. Store them securely!'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Disable 2FA for admin
+// @route   POST /api/auth/disable-2fa
+// @access  Private/Admin
+export const disable2FA = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+
+    // Verify password for security
+    if (!password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password is required to disable 2FA'
+      });
+    }
+
+    const user = await User.scope('withPassword').findByPk(req.user.id);
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Incorrect password'
+      });
+    }
+
+    // Disable 2FA
+    await User.update(
+      {
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: null
+      },
+      { where: { id: req.user.id } }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: '2FA disabled successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Regenerate backup codes (Admin only)
+// @route   POST /api/auth/regenerate-backup-codes
+// @access  Private/Admin
+export const regenerateBackupCodes = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+
+    // Verify password for security
+    if (!password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Password is required to regenerate codes'
+      });
+    }
+
+    const user = await User.scope('withPassword').findByPk(req.user.id);
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Incorrect password'
+      });
+    }
+
+    if (!user.twoFactorEnabled) {
+      return res.status(400).json({
+        status: 'error',
+        message: '2FA is not enabled'
+      });
+    }
+
+    // Generate new backup codes
+    const plainCodes = twoFactorService.generateBackupCodes(5);
+    const hashedCodes = await twoFactorService.hashBackupCodes(plainCodes);
+
+    // Update user
+    await User.update(
+      {
+        twoFactorBackupCodes: hashedCodes
+      },
+      { where: { id: req.user.id } }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Backup codes regenerated successfully! Save these codes securely.',
+      backupCodes: plainCodes,
+      warning: 'These codes will only be shown once. Store them securely! Old codes are now invalid.'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get 2FA status
+// @route   GET /api/auth/2fa-status
+// @access  Private
+export const get2FAStatus = async (req, res, next) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+
+    const unusedCount = user.twoFactorEnabled 
+      ? twoFactorService.getUnusedCodesCount(user.twoFactorBackupCodes)
+      : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        enabled: user.twoFactorEnabled || false,
+        unusedBackupCodes: unusedCount,
+        needsRegeneration: unusedCount <= 2
+      }
     });
   } catch (error) {
     next(error);

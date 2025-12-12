@@ -8,7 +8,7 @@ export const generateToken = (id) => {
   });
 };
 
-export const sendTokenResponse = (user, statusCode, res) => {
+export const sendTokenResponse = (user, statusCode, res, additionalData = {}) => {
   const userId = resolveUserId(user);
   if (!userId) {
     throw new Error('Unable to resolve user id for token generation');
@@ -31,7 +31,8 @@ export const sendTokenResponse = (user, statusCode, res) => {
         email: user.email,
         role: user.role,
         avatar: user.avatar
-      }
+      },
+      ...additionalData
     }
   });
 };

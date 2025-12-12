@@ -2,6 +2,7 @@ import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import Service from '../models/Service.js';
 import User from '../models/User.js';
+import validator from 'validator';
 
 // @desc    Submit review (Client only)
 // @route   POST /api/reviews
@@ -9,6 +10,25 @@ import User from '../models/User.js';
 export const submitReview = async (req, res, next) => {
   try {
     const { orderId, rating, comment } = req.body;
+
+    // Validate inputs
+    if (!orderId || !rating) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide orderId and rating'
+      });
+    }
+
+    // Validate rating range
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    // Sanitize comment to prevent XSS
+    const sanitizedComment = comment ? validator.escape(comment.trim()) : '';
 
     // Check if order exists and belongs to user
     const order = await Order.findByPk(orderId);
@@ -50,7 +70,8 @@ export const submitReview = async (req, res, next) => {
       customerId: req.user.id,
       serviceId: order.serviceId,
       rating,
-      comment
+      comment: sanitizedComment,
+      isApproved: false
     });
 
     res.status(201).json({

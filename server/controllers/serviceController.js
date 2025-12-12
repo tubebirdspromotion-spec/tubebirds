@@ -53,7 +53,17 @@ export const getService = async (req, res, next) => {
 // @access  Private/Admin
 export const createService = async (req, res, next) => {
   try {
-    const service = await Service.create(req.body);
+    // Security: Whitelist allowed fields
+    const allowedFields = ['name', 'slug', 'category', 'description', 'icon', 'order', 'isActive', 'isFeatured'];
+    const serviceData = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        serviceData[field] = req.body[field];
+      }
+    });
+
+    const service = await Service.create(serviceData);
 
     res.status(201).json({
       status: 'success',
@@ -78,7 +88,17 @@ export const updateService = async (req, res, next) => {
       });
     }
 
-    await service.update(req.body);
+    // Security: Whitelist allowed fields
+    const allowedFields = ['name', 'slug', 'category', 'description', 'icon', 'order', 'isActive', 'isFeatured'];
+    const updates = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    await service.update(updates);
 
     res.status(200).json({
       status: 'success',

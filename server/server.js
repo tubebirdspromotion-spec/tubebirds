@@ -14,6 +14,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import xssClean from 'xss-clean';
 import { connectDB, sequelize } from './config/db.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -36,8 +37,25 @@ import seedRoutes from './routes/seedRoutes.js';
 
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware - Helmet with CSP
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://checkout.razorpay.com'],
+      imgSrc: ["'self'", 'data:', 'https:', 'http:'],
+      connectSrc: ["'self'", 'https://api.razorpay.com'],
+      frameSrc: ["'self'", 'https://api.razorpay.com']
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
+// XSS Protection - Sanitize user input
+app.use(xssClean());
 
 // Rate limiting
 const limiter = rateLimit({

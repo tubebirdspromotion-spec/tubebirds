@@ -1,4 +1,5 @@
 import Consultation from '../models/Consultation.js';
+import validator from 'validator';
 // import { sendConsultationNotification, sendConsultationConfirmation } from '../utils/emailService.js';
 
 // @desc    Submit consultation request
@@ -6,7 +7,31 @@ import Consultation from '../models/Consultation.js';
 // @access  Public
 export const submitConsultation = async (req, res, next) => {
   try {
-    const consultation = await Consultation.create(req.body);
+    // Validate and sanitize inputs
+    const allowedFields = ['name', 'email', 'phone', 'service', 'preferredDate', 'preferredTime', 'message'];
+    const consultationData = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        const value = req.body[field];
+        // Sanitize string inputs to prevent XSS
+        if (typeof value === 'string') {
+          consultationData[field] = validator.escape(value.trim());
+        } else {
+          consultationData[field] = value;
+        }
+      }
+    });
+
+    // Validate required fields
+    if (!consultationData.name || !consultationData.email || !consultationData.phone) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please provide name, email, and phone'
+      });
+    }
+
+    const consultation = await Consultation.create(consultationData);
 
     // EMAILS DISABLED FOR CONSULTATIONS
     // Only sending emails for: Order confirmation and Password reset

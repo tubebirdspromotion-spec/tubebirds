@@ -96,6 +96,17 @@ User.init(
     resetPasswordExpire: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    twoFactorBackupCodes: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: null,
+      comment: 'Array of backup codes for admin 2FA (hashed)'
+    },
+    twoFactorEnabled: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: 'Whether 2FA is enabled for this admin user'
     }
   },
   {

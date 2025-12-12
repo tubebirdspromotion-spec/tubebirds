@@ -9,8 +9,19 @@ import '../models/index.js'; // Load model associations
 
 const router = express.Router();
 
+// Security: Disable seed routes in production
+const checkDevelopmentMode = (req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      status: 'error',
+      message: 'Seed routes are disabled in production for security'
+    });
+  }
+  next();
+};
+
 // Pricing migration endpoint - call this via Postman
-router.post('/pricing-migration', protect, authorize('admin'), migratePricingTable);
+router.post('/pricing-migration', checkDevelopmentMode, protect, authorize('admin'), migratePricingTable);
 
 // @desc    Run database migrations (Update schema without data loss)
 // @route   POST /api/seed/migrate
@@ -18,7 +29,7 @@ router.post('/pricing-migration', protect, authorize('admin'), migratePricingTab
 // @desc    Run database migrations (Update schema)
 // @route   POST /api/seed/migrate
 // @access  Private/Admin
-router.post('/migrate', protect, authorize('admin'), async (req, res) => {
+router.post('/migrate', checkDevelopmentMode, protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🔄 Running database migrations...');
     
@@ -78,7 +89,7 @@ router.post('/migrate', protect, authorize('admin'), async (req, res) => {
 // @desc    Sync ALL pricing plans (Views, Subscribers, Monetization, Revenue)
 // @route   POST /api/seed/sync-pricing
 // @access  Private/Admin
-router.post('/sync-pricing', protect, authorize('admin'), async (req, res) => {
+router.post('/sync-pricing', checkDevelopmentMode, protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🔄 Syncing ALL pricing plans...');
 
@@ -261,7 +272,7 @@ router.post('/sync-pricing', protect, authorize('admin'), async (req, res) => {
 // @desc    Seed database (Secure - Admin only)
 // @route   POST /api/seed/initialize
 // @access  Private/Admin
-router.post('/initialize', protect, authorize('admin'), async (req, res) => {
+router.post('/initialize', checkDevelopmentMode, protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🌱 Starting database seed via API...');
 
@@ -281,7 +292,7 @@ router.post('/initialize', protect, authorize('admin'), async (req, res) => {
       admin = await User.create({
         name: 'Admin User',
         email: 'tubebirdspromotion@gmail.com',
-        password: 'Vishal8081@#$',
+        password: process.env.ADMIN_PASSWORD || 'ChangeMe123!@#',
         phone: '9876543210',
         role: 'admin',
         isVerified: true,
@@ -467,8 +478,7 @@ router.post('/initialize', protect, authorize('admin'), async (req, res) => {
       data: {
         admin: {
           email: 'tubebirdspromotion@gmail.com',
-          password: 'Vishal8081@#$',
-          note: 'Use these credentials to login to admin dashboard'
+          note: 'Use these credentials to login to admin dashboard (password from .env)'
         },
         created: {
           services: services.length,
@@ -478,7 +488,7 @@ router.post('/initialize', protect, authorize('admin'), async (req, res) => {
         nextSteps: [
           'Login at: https://tube-birds.netlify.app/login',
           'Email: tubebirdspromotion@gmail.com',
-          'Password: Vishal8081@#$'
+          'Password: Check ADMIN_PASSWORD in .env file'
         ]
       }
     });

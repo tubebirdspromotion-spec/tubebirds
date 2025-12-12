@@ -59,7 +59,25 @@ export const updateUser = async (req, res, next) => {
       });
     }
 
-    await user.update(req.body);
+    // Security: Whitelist allowed fields to prevent privilege escalation
+    const allowedFields = ['name', 'email', 'phone', 'avatar', 'isActive', 'role'];
+    const updates = {};
+    
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    // Prevent self-demotion (admin can't remove their own admin role)
+    if (user.id === req.user.id && updates.role && updates.role !== 'admin') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cannot change your own role'
+      });
+    }
+
+    await user.update(updates);
 
     // Return user without password
     const updatedUser = await User.findByPk(req.params.id, {
