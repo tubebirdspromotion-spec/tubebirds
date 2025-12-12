@@ -114,6 +114,12 @@ export const login = async (req, res, next) => {
 
     // Check if user is admin and 2FA is enabled
     if (user.role === 'admin' && user.twoFactorEnabled) {
+      // Parse backup codes if stored as string
+      let backupCodes = user.twoFactorBackupCodes;
+      if (typeof backupCodes === 'string') {
+        backupCodes = JSON.parse(backupCodes);
+      }
+      
       // Generate temporary token for 2FA verification
       const tempToken = twoFactorService.generateTempToken(user.id);
       
@@ -123,7 +129,7 @@ export const login = async (req, res, next) => {
         require2FA: true,
         tempToken,
         message: 'Please enter your backup code to complete login',
-        unusedCodes: twoFactorService.getUnusedCodesCount(user.twoFactorBackupCodes)
+        unusedCodes: twoFactorService.getUnusedCodesCount(backupCodes)
       });
     }
 
@@ -409,20 +415,27 @@ export const verify2FA = async (req, res, next) => {
       });
     }
 
+    // Parse backup codes if they're stored as string
+    let backupCodes = user.twoFactorBackupCodes;
+    if (typeof backupCodes === 'string') {
+      backupCodes = JSON.parse(backupCodes);
+    }
+
     // Debug logging
     console.log('🔐 2FA Verification Debug:');
     console.log('User ID:', user.id);
     console.log('User email:', user.email);
     console.log('2FA Enabled:', user.twoFactorEnabled);
-    console.log('Backup codes exist:', !!user.twoFactorBackupCodes);
-    console.log('Backup codes type:', typeof user.twoFactorBackupCodes);
-    console.log('Backup codes:', JSON.stringify(user.twoFactorBackupCodes, null, 2));
+    console.log('Backup codes exist:', !!backupCodes);
+    console.log('Backup codes type:', typeof backupCodes);
+    console.log('Backup codes is array:', Array.isArray(backupCodes));
+    console.log('Backup codes count:', backupCodes?.length);
     console.log('Input code:', backupCode);
 
     // Verify backup code
     const codeVerification = await twoFactorService.verifyBackupCode(
       backupCode,
-      user.twoFactorBackupCodes
+      backupCodes
     );
 
     if (!codeVerification.valid) {
@@ -434,7 +447,7 @@ export const verify2FA = async (req, res, next) => {
 
     // Mark code as used
     const updatedCodes = twoFactorService.markCodeAsUsed(
-      user.twoFactorBackupCodes,
+      backupCodes,
       codeVerification.codeIndex
     );
 
