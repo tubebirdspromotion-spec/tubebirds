@@ -445,28 +445,16 @@ export const verify2FA = async (req, res, next) => {
       });
     }
 
-    // Mark code as used
-    const updatedCodes = twoFactorService.markCodeAsUsed(
-      backupCodes,
-      codeVerification.codeIndex
-    );
-
+    // Update last login (codes are reusable, no need to mark as used)
     await user.update({
-      twoFactorBackupCodes: updatedCodes,
       lastLogin: new Date()
     });
-
-    // Get unused codes count
-    const unusedCount = twoFactorService.getUnusedCodesCount(updatedCodes);
 
     // Get user without password
     const userWithoutPassword = await User.findByPk(user.id);
 
     // Send token response
-    sendTokenResponse(userWithoutPassword, 200, res, {
-      unusedBackupCodes: unusedCount,
-      warning: unusedCount <= 2 ? 'You have few backup codes remaining. Please regenerate them.' : null
-    });
+    sendTokenResponse(userWithoutPassword, 200, res);
   } catch (error) {
     next(error);
   }

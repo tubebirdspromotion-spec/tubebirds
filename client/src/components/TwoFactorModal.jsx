@@ -13,7 +13,7 @@ const TwoFactorModal = ({ isOpen, onClose, onVerify, tempToken, unusedCodes }) =
     
     // Validate code format
     if (backupCode.length !== 8 || !/^\d+$/.test(backupCode)) {
-      setError('Please enter a valid 8-digit backup code')
+      setError('Please enter a valid 8-digit code')
       return
     }
 
@@ -22,7 +22,7 @@ const TwoFactorModal = ({ isOpen, onClose, onVerify, tempToken, unusedCodes }) =
       await onVerify(tempToken, backupCode)
       setBackupCode('')
     } catch (err) {
-      setError(err.message || 'Invalid backup code')
+      setError(err.message || 'Invalid code. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -75,24 +75,14 @@ const TwoFactorModal = ({ isOpen, onClose, onVerify, tempToken, unusedCodes }) =
                 Two-Factor Authentication
               </h2>
               <p className="text-gray-600 text-center mb-6">
-                Enter your 8-digit backup code to complete login
+                Enter the 8-digit code sent to your registered mobile number
               </p>
-
-              {/* Unused Codes Info */}
-              {unusedCodes !== undefined && (
-                <div className={`text-center mb-6 text-sm ${
-                  unusedCodes <= 2 ? 'text-orange-600 font-semibold' : 'text-gray-500'
-                }`}>
-                  {unusedCodes} backup code{unusedCodes !== 1 ? 's' : ''} remaining
-                  {unusedCodes <= 2 && ' - Please regenerate soon!'}
-                </div>
-              )}
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Backup Code
+                    8-Digit Code
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -134,7 +124,7 @@ const TwoFactorModal = ({ isOpen, onClose, onVerify, tempToken, unusedCodes }) =
               {/* Help Text */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-gray-500">
-                  Don't have access to your backup codes?{' '}
+                  Didn't receive the code?{' '}
                   <a href="mailto:contact@tubebirdspromotion.com" className="text-blue-600 hover:underline">
                     Contact support
                   </a>
