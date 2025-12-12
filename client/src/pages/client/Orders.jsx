@@ -58,19 +58,15 @@ const Orders = () => {
 
   const handleDownloadInvoice = async (orderId) => {
     try {
-      const response = await api.get(`/orders/${orderId}/invoice`, {
-        responseType: 'blob'
-      })
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `invoice-${orderId}.pdf`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      toast.success('Invoice downloaded successfully')
+      const token = localStorage.getItem('token')
+      // Open invoice in new window so user can print to PDF
+      window.open(
+        `${import.meta.env.VITE_API_URL}/orders/${orderId}/invoice?print=true`,
+        '_blank'
+      )
+      toast.success('Invoice opened in new window - Use Ctrl+P to save as PDF')
     } catch (error) {
-      toast.error('Failed to download invoice')
+      toast.error('Failed to open invoice')
       console.error(error)
     }
   }

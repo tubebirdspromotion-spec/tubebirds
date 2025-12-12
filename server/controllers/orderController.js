@@ -58,6 +58,15 @@ export const getOrders = async (req, res, next) => {
         }
       }
       
+      // Parse channelDetails if it's a string
+      if (typeof orderData.channelDetails === 'string') {
+        try {
+          orderData.channelDetails = JSON.parse(orderData.channelDetails);
+        } catch (e) {
+          console.error('❌ Failed to parse channelDetails:', e);
+        }
+      }
+      
       // Check if pricing exists and has data
       const hasPricing = orderData.pricing && Object.keys(orderData.pricing).length > 0;
       // If pricing is null/empty but planDetails exists, create virtual pricing
@@ -709,13 +718,20 @@ export const generateInvoice = async (req, res, next) => {
       <p style="margin-top: 20px; color: #999; font-size: 11px;">Invoice generated on ${new Date().toLocaleDateString('en-IN')}</p>
     </div>
   </div>
+  
+  <script>
+    // Auto-trigger print dialog when opened directly
+    if (window.location.search.includes('print=true')) {
+      window.print();
+    }
+  </script>
 </body>
 </html>
     `;
 
-    // Set response headers for HTML download
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${order.orderNumber}.html"`);
+    // Set response headers for HTML invoice (user can print to PDF)
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', `inline; filename="Invoice-${order.orderNumber}.html"`);
     res.send(invoiceHtml);
 
   } catch (error) {
