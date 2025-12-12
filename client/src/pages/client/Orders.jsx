@@ -58,13 +58,22 @@ const Orders = () => {
 
   const handleDownloadInvoice = async (orderId) => {
     try {
-      const token = localStorage.getItem('token')
-      // Open invoice in new window so user can print to PDF
-      window.open(
-        `${import.meta.env.VITE_API_URL}/orders/${orderId}/invoice?print=true`,
-        '_blank'
-      )
-      toast.success('Invoice opened in new window - Use Ctrl+P to save as PDF')
+      const response = await api.get(`/orders/${orderId}/invoice`, {
+        responseType: 'text'
+      })
+      
+      // Open invoice HTML in new window
+      const newWindow = window.open('', '_blank')
+      if (newWindow) {
+        newWindow.document.write(response.data)
+        newWindow.document.close()
+        // Auto-trigger print dialog after a short delay
+        setTimeout(() => {
+          newWindow.print()
+        }, 500)
+      }
+      
+      toast.success('Invoice opened - Use Ctrl+P to save as PDF')
     } catch (error) {
       toast.error('Failed to open invoice')
       console.error(error)
