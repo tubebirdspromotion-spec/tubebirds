@@ -169,11 +169,11 @@ const OrderDetail = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-semibold text-gray-600">Service</label>
-                <p className="text-gray-900 mt-1">{order.service?.name || 'N/A'}</p>
+                <p className="text-gray-900 mt-1">{order.service?.title || order.service?.name || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Plan Name</label>
-                <p className="text-gray-900 mt-1">{order.pricing?.planName || order.pricing?.name || 'N/A'}</p>
+                <p className="text-gray-900 mt-1">{order.pricing?.name || order.pricing?.planName || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-600">Order Date</label>
